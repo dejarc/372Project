@@ -1,14 +1,13 @@
-#include "bit.h"
-int main() {
-    word *num;
-    char *start;
-    char *end;
-    printf("enter a number: "); 
-    scanf("%lu", (unsigned long*)num);
-    printf("enter a start bit: ");
-    scanf("%ms", &start);  
-    printf("enter an end bit: ");
-    scanf("%ms", &end);
-    printf("the value of the specified bits are: %lu", (unsigned long)bits(*num,start, end));
-    return 0;
+/* TCSS 372B Winter 2016
+ * Mark Peters, Chris Dejarlais, Hunter Bennett
+ * Course Project LC2200
+ */
+
+#include "LC2200.h"
+
+int main(int argc, char *argv[]) {
+	LC2200_ LC2200 = LC2200_ctor();
+	//gui stuff
+	//asm
+	return 0;
 }
