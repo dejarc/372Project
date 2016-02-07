@@ -1,19 +1,24 @@
-#ifndef Bit_H
+/* TCSS 372B Winter 2016
+ * Mark Peters, Chris Dejarlais, Hunter Bennett
+ * Course Project LC2200
+ */
+
+#ifndef BIT_H
 #define BIT_H
-#include <stdio.h>
 #include <stdlib.h>
-#include <stdint.h>
+#include <stdio.h>
 #include <string.h>
-#include <inttypes.h>
 #include <stdbool.h>
-#include <limits.h>
+#include <stdint.h>
 #define WORD_LEN 32
-typedef uint32_t word;
 typedef _Bool bit;
+typedef uint32_t word;
+
+extern word bus;
 
 word bits(word, int, int);
-bit boolean(word, int);
+bit bitt(word, int);
 word stow(char *);
 char *wtos(word);
-word signx(word, bit); 
+word sigx(word, bit); 
 #endif
