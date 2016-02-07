@@ -7,11 +7,13 @@
 #include <inttypes.h>
 #include <stdbool.h>
 #include <limits.h>
-#define MAXMEM 1048576
+#define WORD_LEN 32
 typedef uint32_t word;
 typedef _Bool bit;
 
-word bits(word myBits, char *beg, char *end);
-bit boolean(word myWord, char bit);
-word stow(char *bitSequence);
+word bits(word, int, int);
+bit boolean(word, int);
+word stow(char *);
+char *wtos(word);
+word signx(word, bit); 
 #endif
