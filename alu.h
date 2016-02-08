@@ -6,17 +6,18 @@
 #ifndef ALU_H
 #define ALU_H
 #include "bit.h"
-
-typedef struct {
+#define NUM_FUNCT 4
+typedef struct arithmeticlogicunit *alu_;
+struct arithmeticlogicunit {
 	bit DrALU;
 	bit LdA;
 	bit LdB;
-	bit func[2];
+	bit func[NUM_FUNCT];
 	word A;
 	word B;
-} arithmeticlogicunit;
+    word functionResult;
+};
 
-typedef arithmeticlogicunit *alu_;
 
 alu_ alu_ctor();
 void alu_kill(alu_);
