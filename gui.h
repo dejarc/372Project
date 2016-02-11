@@ -9,6 +9,7 @@ typedef struct PRIVATE_GUI *Gui;
 Gui gui_ctor();
 void gui_connect_memory(Gui gui, word data[], word count);
 void gui_connect_registers(Gui gui, word data[], const char *names[], word count);
+void gui_connect_pc(Gui gui, word *pc);
 void gui_connect_run(Gui gui, void (*run)());
 void gui_connect_step(Gui gui, void (*step)());
 void gui_main();

@@ -7,7 +7,8 @@
 struct PRIVATE_GUI {
     void (*run)();
     void (*step)();
-  	GtkWidget *window;
+    word *pc;
+    GtkWidget *window;
         GtkWidget *box_vertical;
             GtkWidget *menu_bar;
                 GtkWidget *menu_item_file;
@@ -24,7 +25,7 @@ struct PRIVATE_GUI {
                 GtkWidget *button_2;
                 GtkWidget *label_pc;
                 GtkWidget *entry_pc;
-                    GtkEntryBuffer *entry_buffer_pc;
+                    GtkEntryBuffer *entry_buffer_pc; 
             GtkWidget *scrolled_window_registers;        
                 GtkWidget *tree_view_registers;
                     GtkListStore *list_store_registers;
@@ -38,12 +39,12 @@ static void callback_generic(GtkWidget *widget, void (**data)()) {
 }
 
 static void cell_data_func_binary(GtkTreeViewColumn    *tree_column,
-                           GtkCellRenderer      *cell,
-                           GtkTreeModel         *tree_model,
-                           GtkTreeIter          *iter,
-                           gpointer             column_num) {
+                                  GtkCellRenderer      *cell,
+                                  GtkTreeModel         *tree_model,
+                                  GtkTreeIter          *iter,
+                                  gpointer             data) {
     word *ptr;
-    gtk_tree_model_get(tree_model, iter, (int) column_num, &ptr, -1);
+    gtk_tree_model_get(tree_model, iter, 1, &ptr, -1);
     char binary_string[WORD_LEN + 1];
     word mask = 1 << (WORD_LEN - 1);
     for (int i = 0; i < WORD_LEN; i++) {
@@ -53,23 +54,23 @@ static void cell_data_func_binary(GtkTreeViewColumn    *tree_column,
     g_object_set(G_OBJECT(cell), "text", binary_string, NULL);
 }
 
-static void cell_data_func_reg_int(GtkTreeViewColumn       *tree_column,
-                            GtkCellRenderer         *cell,
-                            GtkTreeModel            *tree_model,
-                            GtkTreeIter             *iter,
-                            gpointer                data) {
+static void cell_data_func_int(GtkTreeViewColumn       *tree_column,
+                               GtkCellRenderer         *cell,
+                               GtkTreeModel            *tree_model,
+                               GtkTreeIter             *iter,
+                               gpointer                data) {
     word *ptr;
-    gtk_tree_model_get(tree_model, iter, 2, &ptr, -1);
+    gtk_tree_model_get(tree_model, iter, 1, &ptr, -1);
     char int_string[12];
     sprintf(int_string, "%d", *ptr);
     g_object_set(G_OBJECT(cell), "text", int_string, NULL);
 }
 
 static void cell_data_func_mem_asm(GtkTreeViewColumn   *tree_column,
-                            GtkCellRenderer     *cell,
-                            GtkTreeModel        *tree_model,
-                            GtkTreeIter         *iter,
-                            gpointer            data) {
+                                   GtkCellRenderer     *cell,
+                                   GtkTreeModel        *tree_model,
+                                   GtkTreeIter         *iter,
+                                   gpointer            data) {
     gpointer ptr;
     gtk_tree_model_get(tree_model, iter, 1, &ptr, -1);
     g_object_set(G_OBJECT(cell), "text", "ADD R1, R2, R3", NULL);
@@ -98,21 +99,26 @@ static void callback_open_file(GtkWidget *widget, Gui gui) {
 static void callback_tree_view_edit(GtkTreeView           *tree_view,
                                     GtkTreePath           *path,
                                     GtkTreeViewColumn     *column,
-                                    gpointer              column_num) {
+                                    Gui                   gui) {
     GtkTreeModel *tree_model;
     tree_model = gtk_tree_view_get_model(tree_view);
     GtkTreeIter iter;
     gtk_tree_model_get_iter(tree_model, &iter, path);
     word *value;
-    gtk_tree_model_get(tree_model, &iter, (int) column_num, &value, -1);
-    GtkWidget *dialog;
-    dialog = gtk_dialog_new_with_buttons("Edit", NULL, GTK_DIALOG_MODAL, 
+    gtk_tree_model_get(tree_model, &iter, 1, &value, -1);
+    GtkWidget *dialog, *spin_button, *content_area;
+    spin_button = gtk_spin_button_new_with_range((((double)(word) -1) + 1) / -2, (word) -1, 1);
+    gtk_spin_button_set_value(GTK_SPIN_BUTTON(spin_button), (double) (int) *value);
+    dialog = gtk_dialog_new_with_buttons("Edit", GTK_WINDOW(gui->window), GTK_DIALOG_MODAL, 
                                          "OK", GTK_RESPONSE_ACCEPT,
                                          "Cancel", GTK_RESPONSE_CANCEL, NULL);
+    gtk_window_set_has_resize_grip(GTK_WINDOW(dialog), FALSE);
+    content_area = gtk_dialog_get_content_area (GTK_DIALOG (dialog));
+    gtk_container_add(GTK_CONTAINER(content_area), spin_button);
+    gtk_widget_show_all(dialog);
     gint response = gtk_dialog_run(GTK_DIALOG(dialog));
     if (response == GTK_RESPONSE_ACCEPT) {
-        //
-        //
+        *value = gtk_spin_button_get_value(GTK_SPIN_BUTTON(spin_button));
     }
     gtk_widget_destroy(dialog);
 }
@@ -129,11 +135,10 @@ static void connect_signals(Gui gui) {
     g_signal_connect(G_OBJECT(gui->menu_item_file_open), "activate",
                      G_CALLBACK(callback_open_file), (gpointer) gui);
     g_signal_connect(G_OBJECT(gui->tree_view_memory), "row-activated",
-                     G_CALLBACK(callback_tree_view_edit), (gpointer) 1);
+                     G_CALLBACK(callback_tree_view_edit), (gpointer) gui);
     g_signal_connect(G_OBJECT(gui->tree_view_registers), "row-activated",
-                     G_CALLBACK(callback_tree_view_edit), (gpointer) 2);
+                     G_CALLBACK(callback_tree_view_edit), (gpointer) gui);
 }
-
 
 static void set_up_layout(Gui gui) {
     gtk_window_set_title(GTK_WINDOW(gui->window), "LC-2200 Simulator");
@@ -188,7 +193,7 @@ Gui gui_ctor() {
     gui->menu_item_help             = gtk_menu_item_new_with_label("Help");
     gui->menu_item_execute          = gtk_menu_item_new_with_label("Execute");
     gui->list_store_memory          = gtk_list_store_new(2, G_TYPE_STRING, G_TYPE_POINTER);
-    gui->list_store_registers       = gtk_list_store_new(3, G_TYPE_UINT, G_TYPE_STRING, G_TYPE_POINTER);
+    gui->list_store_registers       = gtk_list_store_new(3, G_TYPE_STRING, G_TYPE_POINTER, G_TYPE_UINT);
     gui->box_vertical               = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
     gui->box_horizontal             = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
     gui->tree_view_memory           = gtk_tree_view_new_with_model(GTK_TREE_MODEL(gui->list_store_memory));
@@ -220,43 +225,42 @@ void gui_connect_memory(Gui gui, word data[], word count) {
                                                 "", renderer, "text", 0, NULL);                
                                                 
     gtk_tree_view_insert_column_with_data_func(GTK_TREE_VIEW(gui->tree_view_memory),
-                                                -1, "", renderer, 
-                                                &cell_data_func_binary,
-                                                (gpointer) 1, NULL);
+                                               -1, "", renderer, 
+                                               &cell_data_func_binary,
+                                               NULL, NULL);
                                                 
     gtk_tree_view_insert_column_with_data_func(GTK_TREE_VIEW(gui->tree_view_memory),
-                                                -1, "", renderer, 
-                                                &cell_data_func_mem_asm,
-                                                NULL, NULL);
+                                               -1, "", renderer, 
+                                               &cell_data_func_mem_asm,
+                                               NULL, NULL);
 }
 
 void gui_connect_registers(Gui gui, word data[], const char *names[], word count) {
     for (int i = 0; i < count; i++) {
         gtk_list_store_insert_with_values(gui->list_store_registers, NULL, -1,
-                                          0, i, 
-                                          1, names[i], 
-                                          2, &data[i], -1);
+                                          0, names[i], 
+                                          1, &data[i], 
+                                          2, i, -1);
     }
 
     GtkCellRenderer *renderer;
     renderer = gtk_cell_renderer_text_new();
     
     gtk_tree_view_insert_column_with_attributes(GTK_TREE_VIEW(gui->tree_view_registers), -1,
-                                                "", renderer, "text", 0, NULL);    
+                                                "", renderer, "text", 2, NULL);    
                                                 
     gtk_tree_view_insert_column_with_attributes(GTK_TREE_VIEW(gui->tree_view_registers), -1,
-                                                "", renderer, "text", 1, NULL);   
+                                                "", renderer, "text", 0, NULL);   
+
+    gtk_tree_view_insert_column_with_data_func(GTK_TREE_VIEW(gui->tree_view_registers),
+                                               -1, "", renderer, 
+                                               &cell_data_func_binary,
+                                               NULL, NULL);           
                                                 
     gtk_tree_view_insert_column_with_data_func(GTK_TREE_VIEW(gui->tree_view_registers),
-                                                -1, "", renderer, 
-                                                &cell_data_func_binary,
-                                                (gpointer) 2, NULL);           
-                                                
-    gtk_tree_view_insert_column_with_data_func(GTK_TREE_VIEW(gui->tree_view_registers),
-                                                -1, "", renderer, 
-                                                &cell_data_func_reg_int, 
-                                                NULL, NULL);
-                    
+                                               -1, "", renderer, 
+                                               &cell_data_func_int,
+                                               NULL, NULL);  
 }
 
 void gui_connect_run(Gui gui, void (*run)()) {
@@ -265,6 +269,10 @@ void gui_connect_run(Gui gui, void (*run)()) {
 
 void gui_connect_step(Gui gui, void (*step)()) {
     gui->step = step;
+}
+
+void gui_connect_pc(Gui gui, word *pc) {
+    gui->pc = pc;
 }
 
 void gui_main() {
