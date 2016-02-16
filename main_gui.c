@@ -2,10 +2,10 @@
 
 word i = -1;
 word j = 32;
+word pc = 0;
 
 void func() {
-	i = i + 1;
-	j <<= 1;
+	pc = pc + 1;
 }
 
 const char *REG_NAMES[] = {"$zero", "$at", "$v0", "$a0", 
@@ -21,7 +21,8 @@ int main() {
     r[4] = -1;
     gui_connect_memory(gui, g, 100);
     gui_connect_registers(gui, r, REG_NAMES, 16);
-    gui_connect_run(gui, &func);
+    gui_connect_step(gui, &func);
+    gui_connect_pc(gui, &pc);
     gui_main();
     return 0;
 }

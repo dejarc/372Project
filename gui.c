@@ -7,7 +7,6 @@
 struct PRIVATE_GUI {
     void (*run)();
     void (*step)();
-    word *pc;
     GtkWidget *window;
         GtkWidget *box_vertical;
             GtkWidget *menu_bar;
@@ -21,11 +20,9 @@ struct PRIVATE_GUI {
                         GtkWidget *menu_item_execute_step;
                 GtkWidget *menu_item_help;
             GtkWidget *box_horizontal;
-                GtkWidget *button_1;
-                GtkWidget *button_2;
                 GtkWidget *label_pc;
-                GtkWidget *entry_pc;
-                    GtkEntryBuffer *entry_buffer_pc; 
+			    GtkWidget *tree_view_pc;
+			    	GtkListStore *list_store_pc;
             GtkWidget *scrolled_window_registers;        
                 GtkWidget *tree_view_registers;
                     GtkListStore *list_store_registers;
@@ -34,8 +31,31 @@ struct PRIVATE_GUI {
                     GtkListStore *list_store_memory;
 };
 
-static void callback_generic(GtkWidget *widget, void (**data)()) {
-    (*data)();
+static void go_to_pc(Gui gui) {
+	GtkTreeIter iter;
+	gtk_tree_model_get_iter_first(GTK_TREE_MODEL(gui->list_store_pc), &iter);
+	word *pc;
+	gtk_tree_model_get(GTK_TREE_MODEL(gui->list_store_pc), &iter, 0, &pc, -1);
+	GtkTreePath *path_memory;
+	gtk_tree_model_iter_nth_child(GTK_TREE_MODEL(gui->list_store_memory), &iter, NULL, *pc);
+	path_memory = gtk_tree_model_get_path(GTK_TREE_MODEL(gui->list_store_memory), &iter);
+	gtk_tree_view_set_cursor(GTK_TREE_VIEW(gui->tree_view_memory), path_memory, NULL, FALSE);
+}
+
+static void redraw(Gui gui) {
+	gtk_widget_queue_draw(gui->window);
+}
+
+static void callback_run(GtkWidget *widget, Gui gui) {
+    gui->run();
+    go_to_pc(gui);
+    redraw(gui);
+}
+
+static void callback_step(GtkWidget *widget, Gui gui) {
+    gui->step();
+    go_to_pc(gui);
+    redraw(gui);
 }
 
 static void cell_data_func_binary(GtkTreeViewColumn    *tree_column,
@@ -66,6 +86,18 @@ static void cell_data_func_int(GtkTreeViewColumn       *tree_column,
     g_object_set(G_OBJECT(cell), "text", int_string, NULL);
 }
 
+static void cell_data_func_hex(GtkTreeViewColumn       *tree_column,
+                               GtkCellRenderer         *cell,
+                               GtkTreeModel            *tree_model,
+                               GtkTreeIter             *iter,
+                               gpointer                data) {
+    word *ptr;
+    gtk_tree_model_get(tree_model, iter, 0, &ptr, -1);
+    char hex_string[WORD_LEN / 4 + 2];
+    sprintf(hex_string, "x%08X", *ptr);
+    g_object_set(G_OBJECT(cell), "text", hex_string, NULL);
+}
+
 static void cell_data_func_mem_asm(GtkTreeViewColumn   *tree_column,
                                    GtkCellRenderer     *cell,
                                    GtkTreeModel        *tree_model,
@@ -94,6 +126,7 @@ static void callback_open_file(GtkWidget *widget, Gui gui) {
         g_free(filename);
     }
     gtk_widget_destroy(dialog);
+    redraw(gui);
 }
 
 static void callback_tree_view_edit(GtkTreeView           *tree_view,
@@ -113,7 +146,7 @@ static void callback_tree_view_edit(GtkTreeView           *tree_view,
                                          "OK", GTK_RESPONSE_ACCEPT,
                                          "Cancel", GTK_RESPONSE_CANCEL, NULL);
     gtk_window_set_has_resize_grip(GTK_WINDOW(dialog), FALSE);
-    content_area = gtk_dialog_get_content_area (GTK_DIALOG (dialog));
+    content_area = gtk_dialog_get_content_area(GTK_DIALOG (dialog));
     gtk_container_add(GTK_CONTAINER(content_area), spin_button);
     gtk_widget_show_all(dialog);
     gint response = gtk_dialog_run(GTK_DIALOG(dialog));
@@ -121,6 +154,7 @@ static void callback_tree_view_edit(GtkTreeView           *tree_view,
         *value = gtk_spin_button_get_value(GTK_SPIN_BUTTON(spin_button));
     }
     gtk_widget_destroy(dialog);
+    redraw(gui);
 }
 
 static void connect_signals(Gui gui) {
@@ -129,15 +163,15 @@ static void connect_signals(Gui gui) {
     g_signal_connect(G_OBJECT(gui->menu_item_file_exit), "activate",
                      G_CALLBACK(gtk_main_quit), NULL);
     g_signal_connect(G_OBJECT(gui->menu_item_execute_run), "activate",
-                     G_CALLBACK(callback_generic), &gui->run);
+                     G_CALLBACK(callback_run), gui);
     g_signal_connect(G_OBJECT(gui->menu_item_execute_step), "activate",
-                     G_CALLBACK(callback_generic), &gui->step);
+                     G_CALLBACK(callback_step), gui);
     g_signal_connect(G_OBJECT(gui->menu_item_file_open), "activate",
-                     G_CALLBACK(callback_open_file), (gpointer) gui);
+                     G_CALLBACK(callback_open_file), gui);
     g_signal_connect(G_OBJECT(gui->tree_view_memory), "row-activated",
-                     G_CALLBACK(callback_tree_view_edit), (gpointer) gui);
+                     G_CALLBACK(callback_tree_view_edit), gui);
     g_signal_connect(G_OBJECT(gui->tree_view_registers), "row-activated",
-                     G_CALLBACK(callback_tree_view_edit), (gpointer) gui);
+                     G_CALLBACK(callback_tree_view_edit), gui);
 }
 
 static void set_up_layout(Gui gui) {
@@ -145,15 +179,18 @@ static void set_up_layout(Gui gui) {
     gtk_window_set_default_size(GTK_WINDOW(gui->window), 500, 750);
     //gtk_window_set_icon(GTK_WINDOW(window), );
     gtk_window_set_has_resize_grip(GTK_WINDOW(gui->window), FALSE);
+
+    GtkTreeSelection *selection_pc;
+    selection_pc = gtk_tree_view_get_selection(GTK_TREE_VIEW(gui->tree_view_pc));
+    gtk_tree_selection_set_mode(selection_pc, GTK_SELECTION_NONE);
     
     gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(gui->tree_view_memory), FALSE);    
+    gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(gui->tree_view_pc), FALSE);    
     gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(gui->tree_view_registers), FALSE);
     gtk_scrolled_window_set_min_content_height(GTK_SCROLLED_WINDOW(gui->scrolled_window_registers), 216);
-    gtk_scrolled_window_set_min_content_width(GTK_SCROLLED_WINDOW(gui->scrolled_window_memory), 500);
-    
-    gtk_box_pack_start(GTK_BOX(gui->box_horizontal), gui->button_1, FALSE, TRUE, 0);
-    gtk_box_pack_start(GTK_BOX(gui->box_horizontal), gui->button_2, FALSE, TRUE, 0);
-    gtk_box_pack_end(GTK_BOX(gui->box_horizontal), gui->entry_pc, FALSE, TRUE, 0);
+    gtk_scrolled_window_set_min_content_width(GTK_SCROLLED_WINDOW(gui->scrolled_window_memory), 500);    
+
+    gtk_box_pack_end(GTK_BOX(gui->box_horizontal), gui->tree_view_pc, FALSE, FALSE, 0);
     gtk_box_pack_end(GTK_BOX(gui->box_horizontal), gui->label_pc, FALSE, TRUE, 0);
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(gui->menu_item_file), gui->menu_file);
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(gui->menu_item_execute), gui->menu_execute);
@@ -167,7 +204,7 @@ static void set_up_layout(Gui gui) {
     gtk_container_add(GTK_CONTAINER(gui->scrolled_window_memory), gui->tree_view_memory);
     gtk_container_add(GTK_CONTAINER(gui->scrolled_window_registers), gui->tree_view_registers);
     gtk_box_pack_start(GTK_BOX(gui->box_vertical), gui->menu_bar, FALSE, TRUE, 0);
-    gtk_box_pack_start(GTK_BOX(gui->box_vertical), gui-> box_horizontal, FALSE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(gui->box_vertical), gui->box_horizontal, FALSE, TRUE, 0);
     gtk_box_pack_start(GTK_BOX(gui->box_vertical), gui->scrolled_window_registers, FALSE, TRUE, 0);
     gtk_box_pack_start(GTK_BOX(gui->box_vertical), gui->scrolled_window_memory, TRUE, TRUE, 0);
     gtk_container_add(GTK_CONTAINER(gui->window), gui->box_vertical);
@@ -179,9 +216,9 @@ Gui gui_ctor() {
     Gui gui = malloc(sizeof(struct PRIVATE_GUI));
     
     gui->window                     = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    gui->list_store_pc				= gtk_list_store_new(1, G_TYPE_POINTER);
+    gui->tree_view_pc				= gtk_tree_view_new_with_model(GTK_TREE_MODEL(gui->list_store_pc));
     gui->label_pc                   = gtk_label_new("PC: ");
-    gui->entry_buffer_pc            = gtk_entry_buffer_new("x3000", -1);
-    gui->entry_pc                   = gtk_entry_new_with_buffer(gui->entry_buffer_pc);
     gui->menu_bar                   = gtk_menu_bar_new();
     gui->menu_file                  = gtk_menu_new();
     gui->menu_execute               = gtk_menu_new();
@@ -200,9 +237,7 @@ Gui gui_ctor() {
     gui->tree_view_registers        = gtk_tree_view_new_with_model(GTK_TREE_MODEL(gui->list_store_registers));
     gui->scrolled_window_memory     = gtk_scrolled_window_new(NULL, NULL);
     gui->scrolled_window_registers  = gtk_scrolled_window_new(NULL, NULL);
-    gui->button_1                   = gtk_button_new_with_label("Button 1");
-    gui->button_2                   = gtk_button_new_with_label("Button 2");
-    
+
     connect_signals(gui);
     set_up_layout(gui);
     
@@ -272,7 +307,16 @@ void gui_connect_step(Gui gui, void (*step)()) {
 }
 
 void gui_connect_pc(Gui gui, word *pc) {
-    gui->pc = pc;
+	gtk_list_store_insert_with_values(gui->list_store_pc, NULL, -1,
+									  0, pc, -1);
+
+	GtkCellRenderer *renderer;
+    renderer = gtk_cell_renderer_text_new();
+
+    gtk_tree_view_insert_column_with_data_func(GTK_TREE_VIEW(gui->tree_view_pc),
+                                               -1, "", renderer, 
+                                               &cell_data_func_hex,
+                                               NULL, NULL);     
 }
 
 void gui_main() {
