@@ -14,7 +14,7 @@ typedef struct {
 	word MAR;
 //	word Din;
 //	word Dout;
-	word memory[1048576]; //2^20
+	word memory[]; //2^20
 } randomaccessmemory;
 
 typedef randomaccessmemory *mem_;

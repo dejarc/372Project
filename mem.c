@@ -8,9 +8,15 @@
 //const word MAXMEM = 1048576;
 
 mem_ mem_ctor() {
-	randomaccessmemory mem = { 0 };
-	mem_ memp = &mem;
-	return memp;
+	randomaccessmemory *mem = malloc(sizeof(randomaccessmemory) +
+									 1048576 * sizeof(word));
+	mem->DrMEM = 0;
+	mem->LdMAR = 0;
+	mem->MAR = 0;
+	mem->WrMEM = 0;
+
+	//mem_ memp = &mem;
+	return mem;//memp;
 }
 
 void mem_kill(mem_ mem) {
