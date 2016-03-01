@@ -26,11 +26,17 @@ bit bitt(word myWord, int bit) {
 word stow(char *bitSequence) {
     int range = strlen(bitSequence);
     word temp_word = 0; 
-    int index;
-    for(index = 0; index < range; index++) {
-        if (bitSequence[index] == '1') {
-            temp_word ^= 1 << index; 
-        }    
+    int char_index = 0;
+    int word_index = 0;
+    while(char_index < range && word_index < WORD_LEN) {
+        char temp = bitSequence[char_index]; 
+        if (temp == '1') {
+            temp_word ^= 1 << word_index; 
+        }
+        if (temp == '1' || temp == '0') {
+            word_index++;
+        }
+        char_index++;     
     }
     return temp_word;
 }//string to word converter
