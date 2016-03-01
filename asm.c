@@ -10,8 +10,12 @@
 #include <stdint.h>*/
 //#define WORD_LEN 32
 #include "asm.h"
+#define NO_BR -9999
+#define IMM_VAL 20
 char inst[WORD_LEN + 1];
 int arg_num;
+char br_command[9] = "";
+int br_offset = NO_BR;
 void instructionHelper(char *input) {
     int opcode = 0;
     int index;
@@ -39,6 +43,11 @@ void instructionHelper(char *input) {
             inst[index] = '0';
         }
     }
+    for(index = 0; index < IMM_VAL; index++) {
+        if((strcmp(input, "beq") == 0 && (1 & (br_offset >> index))) && br_offset > 0) {
+            inst[index] = '1';
+        }
+    }   
 }
 void argumentHelper(char *input) {
     char *ptr;
@@ -85,11 +94,11 @@ void parseInput(char *input) {
             argumentHelper(input);
         }
     } else if(arg_num > 0) {
-        for(index = 0; index < WORD_LEN; index++) {
+        for(index = 0; index < IMM_VAL; index++) {
             if(1 & (imm >> index))
                 inst[index] = '1';
-        }
-    }   
+        }   
+    }
 }
 void initializeInst() {
     int index = 0;
@@ -98,16 +107,39 @@ void initializeInst() {
     }
 }
 
-char *getInstruction(char *line) {
-    char *tokenPtr = strtok(line, " ,;.\n");
+char *getInstruction(char *line, FILE *input_file) {
+    char *tokenPtr = strtok(line, " ,;.:\n");
     arg_num = 0;
     initializeInst();
+    int branch_found = false;
+    int line_num;
     while(tokenPtr != NULL) {
         if(strcmp(tokenPtr,"ORIG") == 0) 
-            return "";
+            return NULL;
+        int br_inst = (arg_num == 2) & (!(int)strtol(tokenPtr, NULL, 10)) & (tokenPtr[0] != '$') & (br_offset < 0);
+        br_inst = br_inst & (strcmp(br_command, tokenPtr) != 0); 
+        if(!arg_num && (int)strtol(tokenPtr, NULL, 10)) {
+            line_num = (int)strtol(tokenPtr, NULL, 10);  
+            if (branch_found == true && br_offset < 0) {
+                printf("\n end of branch on line %d", line_num);
+                br_offset *= -1;
+                br_offset = line_num - (br_offset + 1);
+                printf("\n value for offset %d", br_offset); 
+            }
+        }
+        if(br_inst) {
+            strcpy(br_command, tokenPtr);
+            br_offset = line_num * -1;
+            printf("\nbranch instruction %s on line %d", br_command, br_offset);
+        }
+        if(strcmp(br_command, tokenPtr) == 0) {
+            branch_found = true;
+        }
         parseInput(tokenPtr);
-        tokenPtr = strtok(NULL, " ,;().\n");
+        tokenPtr = strtok(NULL, " ,:;().\n");
     }
+    if(br_offset < 0) 
+        return NULL;
     return inst;
 }
  
@@ -120,8 +152,15 @@ int main(int argc, char **argv) {
     }
     char line[256];
     while (fgets(line, sizeof(line), input_file)) {    
-        printf("\nthe value of index is %s", getInstruction(line)); 
-    } 
+        printf("\nthe value of index is %s", getInstruction(line, input_file)); 
+    }
+    if (br_offset == NO_BR) {//no branch in code, disregard
+        br_offset = 0;
+    }
+    fseek(input_file, 0, SEEK_SET); 
+    while (fgets(line, sizeof(line), input_file)) {    
+        printf("\nthe value of index is %s", getInstruction(line, input_file)); 
+    }
     return 0;
 }
 

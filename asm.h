@@ -4,4 +4,4 @@ void initializeInst();
 void argumentHelper(char *); 
 void parseInput(char *); 
 void instructionHelper(char *);
-char *getInstruction(char *); 
+char *getInstruction(char *, FILE *); 
