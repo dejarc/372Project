@@ -22,15 +22,20 @@ void instructionHelper(char *input) {
         opcode = 0;   
     } else if(strcmp(input, "addi") == 0) {
         opcode = 2;
+    } else if(strcmp(input, "sw") == 0) {
+        opcode = 4;  
+    } else if(strcmp(input, "lw") == 0) {
+        opcode = 3; 
+    
     } else if(strcmp(input, "beq") == 0) {
         opcode = 5;
     } else if(strcmp(input, "j") == 0) {
         opcode = 6;
     } 
     
-    for(index = 0; index < OPCODE_LEN; index++) {
+    for(index = WORD_LEN - OPCODE_LEN; index < WORD_LEN; index++) {
         //printf("\nvalue of the %d bit is %d",index, 1 & (opcode >> index));
-        if(1 & (opcode >> index)) { 
+        if(1 & (opcode >> (index - WORD_LEN + OPCODE_LEN))) { 
             inst[index] = '1';
         } else {
             inst[index] = '0';
@@ -41,7 +46,6 @@ void argumentHelper(char *input) {
     char *ptr;
     int reg_offset = 0;
     int num_offset = input[2] - 48;
-    int is_num = (input[2] > 47) & (input[2] < 58);  
     int index;
     int range;
     if(input[1] == 'a') {
@@ -53,13 +57,13 @@ void argumentHelper(char *input) {
     } else if (input[1] == 's') {
         reg_offset = 9;
     }
-    if(is_num) {
+    if(num_offset >= 0 && num_offset <= 2) {
         reg_offset += num_offset;
         //printf("\nreg offset %d", reg_offset);
         if(arg_num < 3) {
-            range = arg_num * OPCODE_LEN;
+            range = WORD_LEN - ((arg_num + 1) * (OPCODE_LEN));
         } else {
-            range = WORD_LEN - OPCODE_LEN;
+            range = 0;
         } 
         for(index = range; index < range + OPCODE_LEN; index++) {
             if(1 & (reg_offset >> index - range))
@@ -72,7 +76,7 @@ void parseInput(char *input) {
     int start_bit;
     int imm = (int)strtol(input, NULL, 10); 
     if(!imm) {
-        if(input[0] == 'a' || input[0] == 'b') {
+        if(input[0] == 'a' || input[0] == 'b' || input[0] == 's' || input[0] == 'l') {
         //printf("\n argument was detected");
             instructionHelper(input);
         } else if(input[0] == '$') {
@@ -80,13 +84,10 @@ void parseInput(char *input) {
             argumentHelper(input);
         }
     } else {
-        printf("\nnumber is %d", imm);
-        start_bit = WORD_LEN - 20;
-        for(index = start_bit; index < WORD_LEN; index++) {
-            if(1 & (imm >> index - start_bit))
+        for(index = 0; index < WORD_LEN; index++) {
+            if(1 & (imm >> index))
                 inst[index] = '1';
         }
-              
     }   
 }
 void initializeInst() {
@@ -95,7 +96,7 @@ void initializeInst() {
         inst[index] = '0';
     }
 } 
-int main() {
+int main(FILE *file) {
     FILE *input_file;
     input_file = fopen("input.txt", "r");
     char line[256];
@@ -107,7 +108,7 @@ int main() {
             parseInput(tokenPtr);
             //printf("\n");
             //printf("%s", tokenPtr);
-            tokenPtr = strtok(NULL, " ,;\n");
+            tokenPtr = strtok(NULL, " ,;()\n");
         }
         printf("\nthe value of index is %s", inst); 
     } 
