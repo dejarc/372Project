@@ -12,11 +12,11 @@
 #include "asm.h"
 #define NO_BR -9999
 #define IMM_VAL 20
-char inst[WORD_LEN + 1];
+#define MAX_ROWS 5
 int arg_num;
 char br_command[9] = "";
 int br_offset = NO_BR;
-void instructionHelper(char *input) {
+void instructionHelper(char *input, char *line) {
     int opcode = 0;
     int index;
     if(strcmp(input, "add") == 0) {
@@ -38,18 +38,18 @@ void instructionHelper(char *input) {
     for(index = WORD_LEN - OPCODE_LEN; index < WORD_LEN; index++) {
         //printf("\nvalue of the %d bit is %d",index, 1 & (opcode >> index));
         if(1 & (opcode >> (index - WORD_LEN + OPCODE_LEN))) { 
-            inst[index] = '1';
+            line[index] = '1';
         } else {
-            inst[index] = '0';
+            line[index] = '0';
         }
     }
     for(index = 0; index < IMM_VAL; index++) {
         if((strcmp(input, "beq") == 0 && (1 & (br_offset >> index))) && br_offset > 0) {
-            inst[index] = '1';
+            line[index] = '1';
         }
     }   
 }
-void argumentHelper(char *input) {
+void argumentHelper(char *input, char* line) {
     char *ptr;
     int reg_offset = 0;
     int num_offset = input[2] - 48;
@@ -74,11 +74,11 @@ void argumentHelper(char *input) {
         } 
         for(index = range; index < range + OPCODE_LEN; index++) {
             if(1 & (reg_offset >> index - range))
-                inst[index] = '1';
+                line[index] = '1';
         }     
     }
 }
-void parseInput(char *input) {
+void parseInput(char *input, char *line) {
     int index;
     int start_bit;
     int imm = (int)strtol(input, NULL, 10); 
@@ -88,78 +88,104 @@ void parseInput(char *input) {
     if(!imm) {
         if(instruction_one || instruction_two || instruction_three) {
         //printf("\n argument was detected");
-            instructionHelper(input);
+            instructionHelper(input, line);
         } else if(input[0] == '$') {
             arg_num++;
-            argumentHelper(input);
+            argumentHelper(input, line);
         }
     } else if(arg_num > 0) {
         for(index = 0; index < IMM_VAL; index++) {
             if(1 & (imm >> index))
-                inst[index] = '1';
+                line[index] = '1';
         }   
     }
 }
-void initializeInst() {
+void initializeInst(char *line) {
     int index = 0;
     for(index; index < WORD_LEN; index++) {
-        inst[index] = '0';
+        line[index] = '0';
     }
 }
-
-char *getInstruction(char *line, FILE *input_file) {
+char **getAllInstructions(FILE *fp) {
+    char **bin_array;
+    int num_rows = 0;
+    int max_rows = MAX_ROWS;
+    bin_array = malloc(MAX_ROWS * sizeof(WORD_LEN + 1) * sizeof(char *)); 
+    char line[256];
+    while (fgets(line, sizeof(line), fp)) {//used to scan for beq instructions    
+        if(num_rows - 1 == max_rows) {
+            max_rows *= 2;
+            bin_array = (char **)realloc(bin_array, sizeof(char *) * max_rows * sizeof(WORD_LEN + 1));
+        }
+        bin_array[num_rows] = getInstruction(line); 
+        num_rows++; 
+    }
+    if (br_offset == NO_BR) {//no branch in code, disregard
+        br_offset = 0;
+    }
+    num_rows = 0;
+    fseek(fp, 0, SEEK_SET); 
+    while (fgets(line, sizeof(line), fp)) {    
+        //bin_array  = getInstruction(line, input_file));
+        if(num_rows - 1 == max_rows) {
+            max_rows *= 2;
+            bin_array = (char **)realloc(bin_array, sizeof(char *) * max_rows); 
+        }
+        bin_array[num_rows] = getInstruction(line);
+        num_rows++;
+    }
+    return bin_array;
+}
+char *getInstruction(char *line) {
     char *tokenPtr = strtok(line, " ,;.:\n");
     arg_num = 0;
-    initializeInst();
+    char *new_line = (char *)malloc(WORD_LEN + 1);
+    initializeInst(new_line);
     int branch_found = false;
     int line_num;
     while(tokenPtr != NULL) {
-        if(strcmp(tokenPtr,"ORIG") == 0) 
-            return NULL;
-        int br_inst = (arg_num == 2) & (!(int)strtol(tokenPtr, NULL, 10)) & (tokenPtr[0] != '$') & (br_offset < 0);
-        br_inst = br_inst & (strcmp(br_command, tokenPtr) != 0); 
+        if(strcmp(tokenPtr,"ORIG") == 0)//disregard origin instruction 
+            return "";
+        int br_test1 = (arg_num == 2) & (!(int)strtol(tokenPtr, NULL, 10)); 
+        int br_test2 = (tokenPtr[0] != '$') & (br_offset < 0) & br_test1;
+        int br_inst = br_test2 & (strcmp(br_command, tokenPtr) != 0); 
         if(!arg_num && (int)strtol(tokenPtr, NULL, 10)) {
             line_num = (int)strtol(tokenPtr, NULL, 10);  
             if (branch_found == true && br_offset < 0) {
-                printf("\n end of branch on line %d", line_num);
                 br_offset *= -1;
                 br_offset = line_num - (br_offset + 1);
-                printf("\n value for offset %d", br_offset); 
             }
         }
         if(br_inst) {
             strcpy(br_command, tokenPtr);
             br_offset = line_num * -1;
-            printf("\nbranch instruction %s on line %d", br_command, br_offset);
         }
         if(strcmp(br_command, tokenPtr) == 0) {
             branch_found = true;
         }
-        parseInput(tokenPtr);
+        parseInput(tokenPtr, new_line);
         tokenPtr = strtok(NULL, " ,:;().\n");
     }
-    if(br_offset < 0) 
-        return NULL;
-    return inst;
+    if(br_offset < 0)//initial scan, return empty string 
+        return "";
+    return new_line;
 }
  
 int main(int argc, char **argv) {
     FILE *input_file;
+    char **bin_array;
+    int num_rows = 0;
+    int max_rows = MAX_ROWS;
     if (argc > 1) {
         input_file = fopen(argv[1], "r");
     } else {
         input_file = fopen("input.txt", "r");
     }
-    char line[256];
-    while (fgets(line, sizeof(line), input_file)) {    
-        printf("\nthe value of index is %s", getInstruction(line, input_file)); 
-    }
-    if (br_offset == NO_BR) {//no branch in code, disregard
-        br_offset = 0;
-    }
-    fseek(input_file, 0, SEEK_SET); 
-    while (fgets(line, sizeof(line), input_file)) {    
-        printf("\nthe value of index is %s", getInstruction(line, input_file)); 
+    //printf("\nsize of array is %d ", (int)strlen(bin_array));
+    bin_array = getAllInstructions(input_file);
+    while(bin_array[num_rows] != NULL) {
+        printf("\nassembly instruction at row %d is %s", num_rows, bin_array[num_rows]);
+        num_rows++;
     }
     return 0;
 }
