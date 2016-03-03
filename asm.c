@@ -14,8 +14,9 @@
 #define IMM_VAL 20
 #define MAX_ROWS 5
 int arg_num;
-char br_command[9] = "";
-int br_offset = NO_BR;
+char br_command[9];
+int br_offset;
+int orig;
 void instructionHelper(char *input, char *line) {
     int opcode = 0;
     int index;
@@ -33,6 +34,8 @@ void instructionHelper(char *input, char *line) {
         opcode = 5;
     } else if(strcmp(input, "j") == 0) {
         opcode = 6;
+    } else if(strcmp(input, "HALT") == 0){
+        opcode = 7;
     } 
     
     for(index = WORD_LEN - OPCODE_LEN; index < WORD_LEN; index++) {
@@ -63,6 +66,8 @@ void argumentHelper(char *input, char* line) {
         reg_offset = 6;
     } else if (input[1] == 's') {
         reg_offset = 9;
+    } else if (input[1] == 'v') {
+        reg_offset = 2;
     }
     if(num_offset >= 0 && num_offset <= 2) {
         reg_offset += num_offset;
@@ -85,15 +90,18 @@ void parseInput(char *input, char *line) {
     int instruction_one = (input[0] == 'a') | (input[0] == 'b');
     int instruction_two = (input[0] == 's') | (input[0] == 'l');
     int instruction_three = (input[0] == 'n');
+    if(strcmp(input,"ORIG") == 0) { 
+        orig = 1;
+    } 
     if(!imm) {
-        if(instruction_one || instruction_two || instruction_three) {
+        if(instruction_one || instruction_two || instruction_three || strcmp(input,"HALT") == 0) {
         //printf("\n argument was detected");
             instructionHelper(input, line);
         } else if(input[0] == '$') {
             arg_num++;
             argumentHelper(input, line);
         }
-    } else if(arg_num > 0) {
+    } else if(arg_num > 0 || orig) {
         for(index = 0; index < IMM_VAL; index++) {
             if(1 & (imm >> index))
                 line[index] = '1';
@@ -110,6 +118,8 @@ char **getAllInstructions(FILE *fp) {
     char **bin_array;
     int num_rows = 0;
     int max_rows = MAX_ROWS;
+    br_offset = NO_BR; 
+    strcpy(br_command, ""); 
     bin_array = malloc(MAX_ROWS * sizeof(WORD_LEN + 1) * sizeof(char *)); 
     char line[256];
     while (fgets(line, sizeof(line), fp)) {//used to scan for beq instructions    
@@ -139,13 +149,14 @@ char **getAllInstructions(FILE *fp) {
 char *getInstruction(char *line) {
     char *tokenPtr = strtok(line, " ,;.:\n");
     arg_num = 0;
+    orig = 0;
     char *new_line = (char *)malloc(WORD_LEN + 1);
     initializeInst(new_line);
     int branch_found = false;
     int line_num;
     while(tokenPtr != NULL) {
-        if(strcmp(tokenPtr,"ORIG") == 0)//disregard origin instruction 
-            return "";
+        //if(strcmp(tokenPtr,"ORIG") == 0)//disregard origin instruction 
+        //return "";
         int br_test1 = (arg_num == 2) & (!(int)strtol(tokenPtr, NULL, 10)); 
         int br_test2 = (tokenPtr[0] != '$') & (br_offset < 0) & br_test1;
         int br_inst = br_test2 & (strcmp(br_command, tokenPtr) != 0); 
