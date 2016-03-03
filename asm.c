@@ -13,10 +13,12 @@
 #define NO_BR -9999
 #define IMM_VAL 20
 #define MAX_ROWS 5
+#define HEX_CONST 16
+
 int arg_num;
 char br_command[9];
 int br_offset;
-int orig;
+int hex_input;
 void instructionHelper(char *input, char *line) {
     int opcode = 0;
     int index;
@@ -34,7 +36,7 @@ void instructionHelper(char *input, char *line) {
         opcode = 5;
     } else if(strcmp(input, "j") == 0) {
         opcode = 6;
-    } else if(strcmp(input, "HALT") == 0){
+    } else if(strcmp(input, "halt") == 0){
         opcode = 7;
     } 
     
@@ -59,23 +61,24 @@ void argumentHelper(char *input, char* line) {
     int index;
     int range;
     if(input[1] == 'a') {
-        //printf("the length of the string %d", strlen(input));
         reg_offset = 3;   
-        //printf("\nthe number of the string %d", reg_offset + num_offset);
     } else if(input[1] == 't') { 
         reg_offset = 6;
     } else if (input[1] == 's') {
         reg_offset = 9;
+        if(input[2] == 'p') {
+            reg_offset = 13;
+        }
     } else if (input[1] == 'v') {
         reg_offset = 2;
+    } else if(input[1] == 'f') {
+        reg_offset = 14;
     }
     if(num_offset >= 0 && num_offset <= 2) {
         reg_offset += num_offset;
-        //printf("\nreg offset %d", reg_offset);
+        range = 0;
         if(arg_num < 3) {
             range = WORD_LEN - ((arg_num + 1) * (OPCODE_LEN));
-        } else {
-            range = 0;
         } 
         for(index = range; index < range + OPCODE_LEN; index++) {
             if(1 & (reg_offset >> index - range))
@@ -90,18 +93,17 @@ void parseInput(char *input, char *line) {
     int instruction_one = (input[0] == 'a') | (input[0] == 'b');
     int instruction_two = (input[0] == 's') | (input[0] == 'l');
     int instruction_three = (input[0] == 'n');
-    if(strcmp(input,"ORIG") == 0) { 
-        orig = 1;
-    } 
     if(!imm) {
-        if(instruction_one || instruction_two || instruction_three || strcmp(input,"HALT") == 0) {
-        //printf("\n argument was detected");
+        if(instruction_one || instruction_two || instruction_three || strcmp(input,"halt") == 0) {
             instructionHelper(input, line);
         } else if(input[0] == '$') {
             arg_num++;
             argumentHelper(input, line);
         }
-    } else if(arg_num > 0 || orig) {
+    } else if(arg_num > 0 || hex_input) {
+        if(hex_input) {
+            imm = hexConvert(imm);
+        }
         for(index = 0; index < IMM_VAL; index++) {
             if(1 & (imm >> index))
                 line[index] = '1';
@@ -146,17 +148,27 @@ char **getAllInstructions(FILE *fp) {
     }
     return bin_array;
 }
+int hexConvert(int num) {
+    int converted_num = 0;
+    int hex_mult = 1;
+    while(num > 0) {
+        converted_num += hex_mult * (num % 10);
+        hex_mult *= HEX_CONST;
+        num = num / 10;
+    }
+    return converted_num;
+}
 char *getInstruction(char *line) {
     char *tokenPtr = strtok(line, " ,;.:\n");
     arg_num = 0;
-    orig = 0;
+    hex_input = false;
     char *new_line = (char *)malloc(WORD_LEN + 1);
     initializeInst(new_line);
     int branch_found = false;
     int line_num;
     while(tokenPtr != NULL) {
-        //if(strcmp(tokenPtr,"ORIG") == 0)//disregard origin instruction 
-        //return "";
+        if(strcmp(tokenPtr,"ORIG" ) == 0 || strcmp(tokenPtr,"lw" ) == 0 || strcmp(tokenPtr,"sw" ) == 0) 
+            hex_input = true;
         int br_test1 = (arg_num == 2) & (!(int)strtol(tokenPtr, NULL, 10)); 
         int br_test2 = (tokenPtr[0] != '$') & (br_offset < 0) & br_test1;
         int br_inst = br_test2 & (strcmp(br_command, tokenPtr) != 0); 
@@ -198,6 +210,7 @@ int main(int argc, char **argv) {
         printf("\nassembly instruction at row %d is %s", num_rows, bin_array[num_rows]);
         num_rows++;
     }
+    hexConvert(2002);
     return 0;
 }
 
