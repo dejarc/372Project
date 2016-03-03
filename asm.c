@@ -19,6 +19,7 @@ int arg_num;
 char br_command[9];
 int br_offset;
 int hex_input;
+int first_scan;
 void instructionHelper(char *input, char *line) {
     int opcode = 0;
     int index;
@@ -115,6 +116,7 @@ void initializeInst(char *line) {
     for(index; index < WORD_LEN; index++) {
         line[index] = '0';
     }
+    line[index] = '\0';
 }
 char **getAllInstructions(FILE *fp) {
     char **bin_array;
@@ -122,12 +124,13 @@ char **getAllInstructions(FILE *fp) {
     int max_rows = MAX_ROWS;
     br_offset = NO_BR; 
     strcpy(br_command, ""); 
-    bin_array = malloc(MAX_ROWS * sizeof(WORD_LEN + 1) * sizeof(char *)); 
+    bin_array = malloc(MAX_ROWS * sizeof(WORD_LEN) * sizeof(char *)); 
     char line[256];
+    first_scan = true;
     while (fgets(line, sizeof(line), fp)) {//used to scan for beq instructions    
         if(num_rows - 1 == max_rows) {
             max_rows *= 2;
-            bin_array = (char **)realloc(bin_array, sizeof(char *) * max_rows * sizeof(WORD_LEN + 1));
+            bin_array = (char **)realloc(bin_array, sizeof(char *) * max_rows * sizeof(WORD_LEN));
         }
         bin_array[num_rows] = getInstruction(line); 
         num_rows++; 
@@ -137,6 +140,7 @@ char **getAllInstructions(FILE *fp) {
     }
     num_rows = 0;
     fseek(fp, 0, SEEK_SET); 
+    first_scan = false;
     while (fgets(line, sizeof(line), fp)) {    
         //bin_array  = getInstruction(line, input_file));
         if(num_rows - 1 == max_rows) {
@@ -145,6 +149,14 @@ char **getAllInstructions(FILE *fp) {
         }
         bin_array[num_rows] = getInstruction(line);
         num_rows++;
+        if(strcmp(bin_array[num_rows], "END") == 0) {
+            char * temp = bin_array[num_rows];
+            bin_array[num_rows] = NULL;
+            free(temp);
+            printf("breaking out of rows");
+            break;
+        }
+        
     }
     return bin_array;
 }
@@ -159,7 +171,7 @@ int hexConvert(int num) {
     return converted_num;
 }
 char *getInstruction(char *line) {
-    char *tokenPtr = strtok(line, " ,;.:\n");
+    char *tokenPtr = strtok(line, " ,.:\n");
     arg_num = 0;
     hex_input = false;
     char *new_line = (char *)malloc(WORD_LEN + 1);
@@ -167,13 +179,17 @@ char *getInstruction(char *line) {
     int branch_found = false;
     int line_num;
     while(tokenPtr != NULL) {
+        if(strcmp(tokenPtr, "END") == 0) {
+            strcpy(new_line,"END");
+            return new_line;
+        }
         if(strcmp(tokenPtr,"ORIG" ) == 0 || strcmp(tokenPtr,"lw" ) == 0 || strcmp(tokenPtr,"sw" ) == 0) 
             hex_input = true;
         int br_test1 = (arg_num == 2) & (!(int)strtol(tokenPtr, NULL, 10)); 
         int br_test2 = (tokenPtr[0] != '$') & (br_offset < 0) & br_test1;
         int br_inst = br_test2 & (strcmp(br_command, tokenPtr) != 0); 
         if(!arg_num && (int)strtol(tokenPtr, NULL, 10)) {
-            line_num = (int)strtol(tokenPtr, NULL, 10);  
+            line_num = hexConvert((int)strtol(tokenPtr, NULL, 10));  
             if (branch_found == true && br_offset < 0) {
                 br_offset *= -1;
                 br_offset = line_num - (br_offset + 1);
@@ -187,9 +203,9 @@ char *getInstruction(char *line) {
             branch_found = true;
         }
         parseInput(tokenPtr, new_line);
-        tokenPtr = strtok(NULL, " ,:;().\n");
+        tokenPtr = strtok(NULL, " ,:().\n");
     }
-    if(br_offset < 0)//initial scan, return empty string 
+    if(first_scan)//initial scan, return empty string 
         return "";
     return new_line;
 }
