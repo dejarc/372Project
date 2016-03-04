@@ -7,6 +7,7 @@
 struct PRIVATE_GUI {
     void (*run)(void);
     void (*step)(void);
+    void (*open_file)(FILE *);
     GtkWidget *window;
         GtkWidget *box_vertical;
             GtkWidget *menu_bar;
@@ -98,14 +99,14 @@ static void cell_data_func_hex(GtkTreeViewColumn       *tree_column,
     g_object_set(G_OBJECT(cell), "text", hex_string, NULL);
 }
 
-static void cell_data_func_mem_asm(GtkTreeViewColumn   *tree_column,
-                                   GtkCellRenderer     *cell,
-                                   GtkTreeModel        *tree_model,
-                                   GtkTreeIter         *iter,
-                                   gpointer            data) {
+static void cell_data_func_asm(GtkTreeViewColumn   *tree_column,
+                               GtkCellRenderer     *cell,
+                               GtkTreeModel        *tree_model,
+                               GtkTreeIter         *iter,
+                               gpointer            data) {
     gpointer ptr;
     gtk_tree_model_get(tree_model, iter, 0, &ptr, -1);
-    g_object_set(G_OBJECT(cell), "text", "ADD R1, R2, R3", NULL);
+    g_object_set(G_OBJECT(cell), "text", "ADD $zero, $zero, $zero", NULL);
 }
 
 static void callback_open_file(GtkWidget *widget, Gui gui) {
@@ -121,9 +122,8 @@ static void callback_open_file(GtkWidget *widget, Gui gui) {
         char *filename;
         GtkFileChooser *chooser = GTK_FILE_CHOOSER(dialog);
         filename = gtk_file_chooser_get_filename(chooser);
-        //open_file(filename);
-        printf("%s\n", filename);
-        //
+        FILE *file = fopen(filename, "r");
+        gui->open_file(file);
         g_free(filename);
     }
     gtk_widget_destroy(dialog);
@@ -159,28 +159,28 @@ static void callback_tree_view_edit(GtkTreeView           *tree_view,
 }
 
 static void connect_signals(Gui gui) {
-    g_signal_connect(G_OBJECT(gui->window), "delete_event", 
-                     G_CALLBACK(gtk_main_quit), NULL);
-    g_signal_connect(G_OBJECT(gui->menu_item_file_exit), "activate",
-                     G_CALLBACK(gtk_main_quit), NULL);
-    g_signal_connect(G_OBJECT(gui->menu_item_execute_run), "activate",
-                     G_CALLBACK(callback_run), gui);
+    g_signal_connect(G_OBJECT(gui->window),                 "delete_event", 
+                     G_CALLBACK(gtk_main_quit),             NULL);
+    g_signal_connect(G_OBJECT(gui->menu_item_file_exit),    "activate",
+                     G_CALLBACK(gtk_main_quit),             NULL);
+    g_signal_connect(G_OBJECT(gui->menu_item_execute_run),  "activate",
+                     G_CALLBACK(callback_run),              gui);
     g_signal_connect(G_OBJECT(gui->menu_item_execute_step), "activate",
-                     G_CALLBACK(callback_step), gui);
-    g_signal_connect(G_OBJECT(gui->menu_item_file_open), "activate",
-                     G_CALLBACK(callback_open_file), gui);
-    g_signal_connect(G_OBJECT(gui->tree_view_memory), "row-activated",
-                     G_CALLBACK(callback_tree_view_edit), gui);
-    g_signal_connect(G_OBJECT(gui->tree_view_registers), "row-activated",
-                     G_CALLBACK(callback_tree_view_edit), gui);
-    g_signal_connect(G_OBJECT(gui->tree_view_pc), "row-activated",
-                     G_CALLBACK(callback_tree_view_edit), gui);
+                     G_CALLBACK(callback_step),             gui);
+    g_signal_connect(G_OBJECT(gui->menu_item_file_open),    "activate",
+                     G_CALLBACK(callback_open_file),        gui);
+    g_signal_connect(G_OBJECT(gui->tree_view_memory),       "row-activated",
+                     G_CALLBACK(callback_tree_view_edit),   gui);
+    g_signal_connect(G_OBJECT(gui->tree_view_registers),    "row-activated",
+                     G_CALLBACK(callback_tree_view_edit),   gui);
+    g_signal_connect(G_OBJECT(gui->tree_view_pc),           "row-activated",
+                     G_CALLBACK(callback_tree_view_edit),   gui);
 }
 
 static void set_up_layout(Gui gui) {
     gtk_window_set_title(GTK_WINDOW(gui->window), "LC-2200 Simulator");
     gtk_window_set_default_size(GTK_WINDOW(gui->window), 500, 750);
-    gtk_window_set_icon_from_file(GTK_WINDOW(gui->window), "icon.png", NULL);
+    gtk_window_set_icon_from_file(GTK_WINDOW(gui->window), "icon.ico", NULL);
     gtk_window_set_has_resize_grip(GTK_WINDOW(gui->window), FALSE);
 
     GtkTreeSelection *selection_pc;
@@ -269,7 +269,7 @@ void gui_connect_memory(Gui gui, word data[], word count) {
                                                 
     gtk_tree_view_insert_column_with_data_func(GTK_TREE_VIEW(gui->tree_view_memory),
                                                -1, "", renderer, 
-                                               &cell_data_func_mem_asm,
+                                               &cell_data_func_asm,
                                                NULL, NULL);
 }
 
@@ -320,6 +320,10 @@ void gui_connect_pc(Gui gui, word *pc) {
                                                -1, "", renderer, 
                                                &cell_data_func_hex,
                                                NULL, NULL);     
+}
+
+void gui_connect_open_file(Gui gui, void (*open_file)(FILE *)) {
+    gui->open_file = open_file;
 }
 
 void gui_main() {
