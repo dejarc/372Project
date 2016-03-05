@@ -102,9 +102,7 @@ void fsm_kill(fsm_ fsm) {
 	fsm = NULL;
 }
 
-void fsm_tick(fsm_ fsm) {
 
-}
 //void fsm_next(fsm_ fsm);
 //void fsm_ir(fsm_ fsm);
 //void fsm_z(fsm_ fsm);

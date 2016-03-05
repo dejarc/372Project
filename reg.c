@@ -10,8 +10,9 @@ reg_ reg_ctor() {
     registerfile *reg = malloc(sizeof(registerfile));
     reg->DrREG = false;
     reg->WrREG = false;
-	for(regfile = 0; regfile < REG_LOG; regfile++)
-		reg->regno[regfile] = false;
+    reg->regno = 0;
+//	for(regfile = 0; regfile < REG_LOG; regfile++)
+//		reg->regno[regfile] = false;
 
 	//					$zero  $at	  $v0	 $a0	$a1	   $a2	  $t0	 $t1
 	bit reserved[] = {	true,  true,  false, false, false, false, false, false,
@@ -46,14 +47,14 @@ void reg_kill(reg_ reg) {
 }
 
 void reg_Dr(reg_ reg) {
-	if (reg->DrREG) {
+	if (reg->DrREG) bus = reg->registers[reg->regno];
 		//get register indicated and bus = reg;
-	}
+
 }
 void reg_Wr(reg_ reg) {
-	if (reg->WrREG) {
+	if (reg->WrREG) if (!reg->reserved[reg->regno]) reg->reserved[reg->regno] = bus;
 		//write to indicated reegister from bus;
-	}
+//	}
 }
 
 void reg_writeReserved(reg_);

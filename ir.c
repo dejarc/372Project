@@ -25,3 +25,10 @@ void ir_Dr(ir_ ir) {
 void ir_Ld(ir_ ir) {
 	if (ir->LdIR) ir->instruction = bus;
 }
+
+word ir_reg(ir_ ir, word reg) {
+	if (reg == 0) return bits(ir->instruction, 4, 6);
+	if (reg == 1) return bits(ir->instruction, 7, 9);
+	if (reg == 2) return bits(ir->instruction, 29, 31);
+	return 0;
+}

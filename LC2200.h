@@ -40,8 +40,7 @@ void LC2200_kill(LC2200_);
 
 void start(LC2200_, char, word);
 void cycle(LC2200_);
-void setup(LC2200_);
-void state(LC2200_);
+void microstate(LC2200_);
 void debug(LC2200_);
 
 #endif

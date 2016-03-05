@@ -16,7 +16,8 @@ typedef struct {
 //	word Din;
 //	word Dout;
 //	const word zero;
-	bit regno[REG_LOG];
+//	bit regno[REG_LOG];
+	word regno;
 	bit reserved[REG_NUM];
 	bit calleesave[REG_NUM];
 	word registers[REG_NUM];

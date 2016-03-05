@@ -9,18 +9,20 @@ word bits(word myBits, int beg, int end) {
     int bit;
     if (ending >= starting && ending < 32) {
         for(index = 0; index <= ending - starting; index++) {
-            bit = myBits >> (starting + index) & 1;
-            temp_word ^= bit << index;
+            bit = myBits >> (WORD_LEN - 1 - starting - index) & 1;
+//        	printf("bit:%lu\n", bit);
+            temp_word ^= bit << (ending - starting) - index;
             //printf("value of bit %d is %d\n", starting + index, bit);
         } 
         return temp_word;
     }    
     printf("\nend bit must be greater than or equal to start bit!");
-    return  - 1;
+    return  0;
 }
 
 bit bitt(word myWord, int bit) {
-    return myWord >> bit & 1; 
+	if (bit >= 32) return 0;
+    return myWord >> WORD_LEN - 1 - bit & 1;
 }
 
 word stow(char *bitSequence) {
