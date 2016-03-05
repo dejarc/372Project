@@ -10,7 +10,9 @@
 #include <string.h>
 #include <stdbool.h>
 #include <stdint.h>
+
 #define WORD_LEN 32
+
 typedef _Bool bit;
 typedef uint32_t word;
 

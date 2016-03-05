@@ -21,6 +21,11 @@
  */
 
 fsm_ fsm_ctor() {
+	int romaddress;
+	finitestatemachine *fsm = malloc(sizeof(finitestatemachine));
+	fsm->mode = false;
+	fsm->state = 0;
+
 				   /* 	         code - ##### PARMO PABMIZ MR ## ## OZ+SC
 				    *
 				    * op 0123		the opcode address of the command
@@ -29,19 +34,18 @@ fsm_ fsm_ctor() {
 				    * dr 01234		drive bits in order: PC,ALU,REG,MEM,OFF
 				    * ld 567890		load bits in order:  PC,ALU-A,ALU-B,MAR,IR,Z
 				    * wr 12			write bits in order: MEM,REG
-				    * fn 34			function bits to ALU
-				    * rg 56			register bits to IR
-				    * +  78901		how to go to the next step:
+				    * fn 345		function bits to ALU
+				    * rg 67			register bits to IR
+				    * +  8901		how to go to the next step:
 				    * 					O 27: use opcode in address
 				    * 					Z 28: use z-val in address
 				    * 					+ 29: increment and use state in address
 				    * 					S 30: whether to invoke callee-save
-				    * 					C 31: the value of the clock
 				    *
 				    * 	         op   z st    dr    ld     wr fn  rg +
 				    * 	         code - ##### PARMO PABMIZ MR ### ## OZ+S */
-	finitestatemachine fsm =  /* 0123 4 56789 01234 567890 12 345 67 8901 */
-		{ 0, 0,{/*ifetch1*/stow("1111 0 00000 10000 010100 00 000 00 0010"),//0
+	word states[] = {	      /* 0123 4 56789 01234 567890 12 345 67 8901 */
+				/*ifetch1*/stow("1111 0 00000 10000 010100 00 000 00 0010"),//0
 				/*ifetchc*/stow("1111 0 10011 00000 000000 00 000 00 0000"),//1
 				/*ifetch2*/stow("1111 0 00001 00010 000010 00 000 00 0010"),//2
 				/*ifetch3*/stow("1111 0 00010 01000 100000 00 011 00 1000"),//3
@@ -83,16 +87,14 @@ fsm_ fsm_ctor() {
 				/*jalr1  */stow("0110 0 10000 10000 000000 01 000 01 1010"),//27
 				/*jalr2  */stow("0110 0 10001 00100 100000 00 000 00 0000"),//28
 				/*halt   */stow("0111 0 10000 00000 000000 11 000 00 0000") //29
-		       }
-		};
-//							  |						 |						  |			 |			   |
-//            CODE      STATE | PC	ALU		REG	MEM	 OFF | PC  A  B  MAR   IR   Z | MEM  REG | FUNC  REGNO | M  T
-//            CODE      STATE | PC	ALU		REG	MEM	 OFF | PC  A  B  MAR   IR   Z | MEM  REG | FUNC  REGNO | M  T
-//            CODE      STATE | PC	ALU		REG	MEM	 OFF | PC  A  B  MAR   IR   Z | MEM  REG | FUNC  REGNO | M  T
-//            CODE      STATE | PC	ALU		REG	MEM	 OFF | PC  A  B  MAR   IR   Z | MEM  REG | FUNC  REGNO | M  T
-//            CODE      STATE | PC	ALU		REG	MEM	 OFF | PC  A  B  MAR   IR   Z | MEM  REG | FUNC  REGNO | M  T
-	fsm_ fsmp = &fsm;
-	return fsmp;
+				////							  |						 |						  |			 |			   |
+				////            CODE      STATE | PC	ALU		REG	MEM	 OFF | PC  A  B  MAR   IR   Z | MEM  REG | FUNC  REGNO | M  T
+	};
+	for(romaddress = 0; romaddress < ROM_SIZE; romaddress++)
+		fsm->ROM[romaddress] = states[romaddress];
+
+	return fsm;
+
 }
 
 void fsm_kill(fsm_ fsm) {

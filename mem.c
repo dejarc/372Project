@@ -8,12 +8,15 @@
 //const word MAXMEM = 1048576;
 
 mem_ mem_ctor() {
+	int address;
 	randomaccessmemory *mem = malloc(sizeof(randomaccessmemory) +
-									 1048576 * sizeof(word));
-	mem->DrMEM = 0;
-	mem->LdMAR = 0;
+									 MAX_MEM * sizeof(word));
+	mem->DrMEM = false;
+	mem->LdMAR = false;
+	mem->WrMEM = false;
 	mem->MAR = 0;
-	mem->WrMEM = 0;
+	for(address = 0; address < MAX_MEM; address++)
+		mem->memory[address] = 0;
 
 	//mem_ memp = &mem;
 	return mem;//memp;

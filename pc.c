@@ -6,9 +6,16 @@
 #include "pc.h"
 
 pc_ pc_ctor() {
-	programcounter pc = { 0 };
-	pc_ pcp = &pc;
-	return pcp;
+	programcounter *pc = malloc(sizeof(programcounter));
+	pc->DrPC = false;
+	pc->LdPC = false;
+	pc->pc = 0;
+	return pc;
+}
+
+void pc_kill(pc_ pc) {
+	free(pc);
+	pc = NULL;
 }
 
 void pc_Dr(pc_ pc) {

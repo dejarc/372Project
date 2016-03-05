@@ -7,16 +7,19 @@
 #define REG_H
 #include "bit.h"
 
+#define REG_LOG 4
+#define REG_NUM 16
+
 typedef struct {
 	bit DrREG;
 	bit WrREG;
-	bit regno[4];
-	word Din;
-	word Dout;
-	const word zero;
-	word registers[16];
-	const bit reserved[16];
-	const bit calleesave[16];
+//	word Din;
+//	word Dout;
+//	const word zero;
+	bit regno[REG_LOG];
+	bit reserved[REG_NUM];
+	bit calleesave[REG_NUM];
+	word registers[REG_NUM];
 } registerfile;
 
 typedef registerfile *reg_;

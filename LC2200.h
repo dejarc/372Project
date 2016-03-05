@@ -6,7 +6,7 @@
 #ifndef LC_2200_H
 #define LC_2200_H
 
-//#include "bit.h"
+#include "bit.h"
 #include "fsm.h"
 #include "pc.h"
 #include "alu.h"
@@ -37,8 +37,12 @@ typedef littlecomputer2200 *LC2200_;
 
 LC2200_ LC2200_ctor();
 void LC2200_kill(LC2200_);
+
 void start(LC2200_, char, word);
 void cycle(LC2200_);
+void setup(LC2200_);
+void state(LC2200_);
+void debug(LC2200_);
 
 #endif
 

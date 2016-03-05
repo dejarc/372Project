@@ -6,9 +6,11 @@
 #include "ir.h"
 
 ir_ ir_ctor() {
-	instructionregister ir = { 0 };
-	ir_ irp = &ir;
-	return irp;
+	instructionregister *ir = malloc(sizeof(instructionregister));
+	ir->DrOFF = false;
+	ir->LdIR = false;
+	ir->instruction = 0;
+	return ir;
 }
 
 void ir_kill(ir_ ir) {
@@ -17,7 +19,7 @@ void ir_kill(ir_ ir) {
 }
 
 void ir_Dr(ir_ ir) {
-	if (ir->DrOFF) bus = sigx(ir->instruction, 19);
+	if (ir->DrOFF) bus = ir->instruction;//sigx(ir->instruction, 19);
 }
 
 void ir_Ld(ir_ ir) {

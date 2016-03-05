@@ -7,12 +7,12 @@
 #define FSM_H
 #include "bit.h"
 
-//static const word ROMSIZE = 30;
+#define ROM_SIZE 30
 
 typedef struct {
 	bit mode;
 	word state;
-	word ROM[30];
+	word ROM[ROM_SIZE];
 } finitestatemachine;
 
 typedef finitestatemachine *fsm_;

@@ -5,15 +5,60 @@
 
 #include <stdio.h>
 #include "LC2200.h"
+//#pragma diag_suppress 28
 
+//const int MAX_MEM = 1000000;
+
+void testSystem(LC2200_);
 
 int main(int argc, char *argv[]) {
+	printf("ready player one\n");
 	LC2200_ LC2200 = LC2200_ctor();
-	printf("computer built pronto");
+	printf("computer built pronto\n");
 	//testBits(LC2200);
-	//test(LC2200);
+	//test(LC2200);	
+	testSystem(LC2200);
+	printf("machine cooloff\n");
 	return 0;
 }
+
+void testSystem(LC2200_ LC2200) {
+	debug(LC2200);
+}
+//	int w;
+////	printf("%d\n", LC2200->fsm->rom[w]);
+//
+////	for(w = 0; w < MAX_MEM; w++) printf("MEM: %lu: %lu\n", w, LC2200->mem->memory[w]);
+////	w = 29;
+////	printf("ROM: %lu", LC2200->fsm->ROM[10]);
+//	printf("ROM: mode: %lu\n", LC2200->fsm->mode);
+//	printf("ROM: state: %s: %lu\n", wtos(LC2200->fsm->state), LC2200->fsm->state);
+//	for (w = 0; w < ROM_SIZE; w++) printf("ROM: rom %lu: %s: %lu\n", w, wtos(LC2200->fsm->rom[w]), LC2200->fsm->rom[w]);
+//	printf("PC: Dr: %lu\n", LC2200->pc->DrPC);
+//	printf("PC: Ld: %lu\n", LC2200->pc->LdPC);
+//	printf("PC: pc: %s: %lu\n", wtos(LC2200->pc->pc), LC2200->pc->pc);
+//    printf("ALU: Dr: %lu\n", LC2200->alu->DrALU);
+//    printf("ALU: LdA: %lu\n", LC2200->alu->LdA);
+//    printf("ALU: LdB: %lu\n", LC2200->alu->LdB);
+//    printf("ALU: A: %s: %lu\n", wtos(LC2200->alu->A), LC2200->alu->A);
+//    printf("ALU: A: %s: %lu\n", wtos(LC2200->alu->B), LC2200->alu->B);
+//	for(w = 0; w < NUM_FUNC; w++) printf("ALU: func %d: %lu\n", w, LC2200->alu->func[w]);
+//
+////		char s[] = wtos(LC2200->fsm->ROM[w]);
+////		printf("ROM %d: %s", w, s);
+////	LC2200->mem->memory[0] = stow();
+//	printf("--------\n");
+////	for(w = 0; w < WORD_LEN; w++) {
+////		bit on = bitt(LC2200->fsm->ROM[0], w);
+////		printf("%d", on);
+////	}
+//	printf("\n--------\n");
+//
+//
+//	//start(LC2200, 'x', 1000);
+//
+//
+//}
 
 //void testBits(LC2200_ LC2200) {
 //	word w = stow("1001");

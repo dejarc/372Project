@@ -27,31 +27,35 @@ word stow(char *bitSequence) {
     int range = strlen(bitSequence);
     word temp_word = 0; 
     int char_index = 0;
-    int word_index = 0;
-    while(char_index < range && word_index < WORD_LEN) {
+    int word_index = WORD_LEN-1;
+    while(char_index < range && word_index >= 0) {
         char temp = bitSequence[char_index]; 
         if (temp == '1') {
-            temp_word ^= 1 << word_index; 
+            temp_word ^= 1 << word_index;
         }
         if (temp == '1' || temp == '0') {
-            word_index++;
+            word_index--;
         }
         char_index++;     
     }
+//    printf("%s %lu\n", bitSequence, temp_word);
+//    wtos(temp_word);
     return temp_word;
 }//string to word converter
 
-char * wtos(word bits) {
-    char *temp_word;
-    temp_word = (char *)malloc(WORD_LEN + 1);
+char *wtos(word bits) {
+//    char temp_word[WORD_LEN];
+    char *temp_word = (char *)malloc(WORD_LEN+1);
     int index;
-    for(index = 0; index < WORD_LEN; index++) {
-        if(bits >> index & 1) {
+    for(index = WORD_LEN-1; index >= 0; index--) {
+        if(bits >> (WORD_LEN - index-1) & 1) {
             temp_word[index] = '1';
         } else {
             temp_word[index] = '0';
         }
     }
+    temp_word[WORD_LEN] = '\0';
+//    printf("%s\n", temp_word);
     return temp_word;
 } 
 
