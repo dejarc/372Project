@@ -16,7 +16,7 @@ mem_ mem_ctor() {
 	mem->WrMEM = false;
 	mem->MAR = 0;
 	for(address = 0; address < MAX_MEM; address++)
-		mem->memory[address] = 0;
+		mem->MEM[address] = 0;
 
 	//mem_ memp = &mem;
 	return mem;//memp;
@@ -28,7 +28,7 @@ void mem_kill(mem_ mem) {
 }
 
 void mem_Dr(mem_ mem) {
-	if (mem->DrMEM) bus = mem->memory[mem->MAR];
+	if (mem->DrMEM) bus = mem->MEM[mem->MAR];
 }
 
 void mem_Ld(mem_ mem) {
@@ -36,5 +36,5 @@ void mem_Ld(mem_ mem) {
 }
 
 void mem_Wr(mem_ mem) {
-	if (mem->WrMEM) mem->memory[mem->MAR] = bus;
+	if (mem->WrMEM) mem->MEM[mem->MAR] = bus;
 }

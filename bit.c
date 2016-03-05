@@ -26,17 +26,28 @@ bit bitt(word myWord, int bit) {
 }
 
 word stow(char *bitSequence) {
-    int range = strlen(bitSequence);
-    word temp_word = 0; 
-    int char_index = 0;
-    int word_index = WORD_LEN-1;
-    while(char_index < range && word_index >= 0) {
+	int range;
+	int word_index = 0;
+	int char_index = 0;
+    word temp_word = 0;
+    for (range = 0; range < strlen(bitSequence); range++)
+    	if (bitSequence[range] == '1' || bitSequence[range] == '0')
+    		word_index++;
+    range = word_index;
+//    char_index = WORD_LEN - 1 - char_index;
+//    printf("range:%d charindex:%d\n", range, char_index);
+//    printf("1range:%d wordindex:%d\n", range, word_index);
+    word_index = WORD_LEN - range;
+    range += word_index;
+    char_index = 0;
+//    printf("3range:%d wordindex:%d\n", range, word_index);
+    while(char_index < strlen(bitSequence) && word_index < range) {
         char temp = bitSequence[char_index]; 
         if (temp == '1') {
-            temp_word ^= 1 << word_index;
+            temp_word ^= 1 << WORD_LEN -1- word_index;
         }
         if (temp == '1' || temp == '0') {
-            word_index--;
+            word_index++;
         }
         char_index++;     
     }

@@ -15,7 +15,7 @@ typedef struct {
 	bit LdMAR;
 	bit WrMEM;
 	word MAR;
-	word memory[]; //2^20 / MAX_MEM
+	word MEM[]; //2^20 / MAX_MEM
 } randomaccessmemory;
 
 typedef randomaccessmemory *mem_;

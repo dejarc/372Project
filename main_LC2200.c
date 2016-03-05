@@ -25,7 +25,11 @@ int main(int argc, char *argv[]) {
 void testSystem(LC2200_ LC2200) {
 //	debug(LC2200);
 	LC2200->pc->pc = 1;
+	LC2200->mem->MEM[1] = stow("0010 0000 0000 0000 0000 0000 0000 0011");
+	LC2200->mem->MEM[2] = stow("0010 0001 0001 0000 0000 0000 0000 0100");
+	LC2200->mem->MEM[3] = stow("0111 0000 0000 0000 0000 0000 0000 0000");
 	start(LC2200, 'h');
+	LC2200_kill(LC2200);
 }
 //	int w;
 ////	printf("%d\n", LC2200->fsm->rom[w]);
