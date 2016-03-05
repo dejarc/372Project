@@ -6,4 +6,4 @@ void parseInput(char *, char *);
 void instructionHelper(char *, char *);
 char **getAllInstructions(FILE *); 
 int hexConvert(int ); 
-char *getInstruction(char *); 
+char *getInstruction(char *, char**, int*); 
