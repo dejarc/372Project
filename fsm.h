@@ -10,7 +10,7 @@
 #define ROM_SIZE 30
 #define OP_CODE 0
 #define Z_VALUE 4
-#define MICRO_STATE 5
+#define MICRO_S 5
 #define PC_DR 10
 #define ALU_DR 11
 #define REG_DR 12

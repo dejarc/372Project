@@ -24,6 +24,8 @@ typedef enum {
 
 typedef struct {
 	bit clock;
+	bit z;
+	word cycle;
 	fsm_ fsm;
 	pc_ pc;
 	alu_ alu;
@@ -38,8 +40,8 @@ typedef littlecomputer2200 *LC2200_;
 LC2200_ LC2200_ctor();
 void LC2200_kill(LC2200_);
 
-void start(LC2200_, char, word);
-void cycle(LC2200_);
+void start(LC2200_, char);
+void setupcycle(LC2200_);
 void microstate(LC2200_);
 void debug(LC2200_);
 

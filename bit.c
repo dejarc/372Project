@@ -56,7 +56,7 @@ char *wtos(word bits) {
             temp_word[index] = '0';
         }
     }
-    temp_word[WORD_LEN] = '\0';
+    temp_word[WORD_LEN] = 0;
 //    printf("%s\n", temp_word);
     return temp_word;
 } 

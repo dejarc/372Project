@@ -23,7 +23,9 @@ int main(int argc, char *argv[]) {
 }
 
 void testSystem(LC2200_ LC2200) {
-	debug(LC2200);
+//	debug(LC2200);
+	LC2200->pc->pc = 1;
+	start(LC2200, 'h');
 }
 //	int w;
 ////	printf("%d\n", LC2200->fsm->rom[w]);
