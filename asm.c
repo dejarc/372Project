@@ -247,7 +247,7 @@ char *getInstruction(char *line, char **br_labels, int *br_lines) {
     return new_line;
 }
  
-int main(int argc, char **argv) {
+int debugCommandLine(int argc, char **argv) {
     FILE *input_file;
     char **bin_array;
     int num_rows = 0;

@@ -7,3 +7,4 @@ void instructionHelper(char *, char *);
 char **getAllInstructions(FILE *); 
 int hexConvert(int ); 
 char *getInstruction(char *, char**, int*); 
+int debugCommandLine(int, char **);

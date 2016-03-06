@@ -8,6 +8,7 @@
 word bus;
 
 LC2200_ LC2200_ctor() {
+	int useless = 0;
 	littlecomputer2200 *LC2200 = malloc(sizeof(littlecomputer2200));
 	LC2200->debug = false;
 	LC2200->safety = false;

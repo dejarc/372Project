@@ -15,6 +15,7 @@
 #include "ir.h"
 
 #define SAFETY_LIMIT 255
+#define USE_LESS 0
 
 typedef enum {
 	Dr, Ld, Wr

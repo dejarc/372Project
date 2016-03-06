@@ -5,22 +5,40 @@
 
 #include <stdio.h>
 #include "LC2200.h"
+#include "asm.h"
 //#pragma diag_suppress 28
 
 //const int MAX_MEM = 1000000;
 
+void uploadASM(LC2200_, char*);
 void testSystem(LC2200_);
 
 int main(int argc, char *argv[]) {
 	printf("ready player one\n");
 	LC2200_ LC2200 = LC2200_ctor();
 	printf("computer built pronto\n");
-	//testBits(LC2200);
-	//test(LC2200);	
+	uploadASM(LC2200, "input.txt");
+
+	if (true) return 0;
 	//testSystem(LC2200);
 	LC2200->debug = true;
 	printf("machine cooloff\n");
 	return 0;
+}
+
+void uploadASM(LC2200_ LC2200, char* input) {
+	FILE *input_file;
+    char **binary;
+    int rows = 0;
+	input_file = fopen(input, "r");
+    binary = getAllInstructions(input_file);
+    while(binary[rows] != NULL) {
+        printf("\nassembly instruction at row %d is %s", rows, binary[rows]);
+        rows++;
+    }
+//    LC2200->pc->pc = binary
+
+
 }
 
 void testSystem(LC2200_ LC2200) {
