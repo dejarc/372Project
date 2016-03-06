@@ -36,7 +36,6 @@ void instructionHelper(char *input, char *line) {
     } 
     
     for(index = WORD_LEN - OPCODE_LEN; index < WORD_LEN; index++) {
-        //printf("\nvalue of the %d bit is %d",index, 1 & (opcode >> index));
         if(1 & (opcode >> (index - WORD_LEN + OPCODE_LEN))) { 
             line[index] = '1';
         } else {
@@ -114,7 +113,9 @@ char **getAllInstructions(FILE *fp) {
     char **bin_array;
     char **br_labels;
     int *br_lines;
+    int index;
     int num_rows = 0;
+    char *temp_word = malloc(WORD_LEN);
     int max_rows = MAX_ROWS;
     max_branches = MAX_ROWS;
     num_branches = 0;
@@ -136,15 +137,19 @@ char **getAllInstructions(FILE *fp) {
     first_scan = false;
     while (fgets(line, sizeof(line), fp)) {    
         bin_array[num_rows] = getInstruction(line, br_labels, br_lines);
-        num_rows++;
+        strcpy(temp_word, bin_array[num_rows]);
         if(strcmp(bin_array[num_rows], "END") == 0) {
             char * temp = bin_array[num_rows];
             bin_array[num_rows] = NULL;
             free(temp);
             break;
         }
-        
+        for(index = 0; index < WORD_LEN; index++) {
+            bin_array[num_rows][index] = temp_word[(WORD_LEN - 1) - index];
+        }
+        num_rows++;
     }
+    free(temp_word);
     return bin_array;
 }
 int hexConvert(int num) {
@@ -200,11 +205,9 @@ char *getInstruction(char *line, char **br_labels, int *br_lines) {
                 br_lines[branch_index] = line_num - (br_lines[branch_index]);//line number shows up after a label, store the difference
             } else if(num_branches > 0 && br_lines[num_branches - 1] == 0 && first_scan) {// branch value not set, set value here
                 br_lines[num_branches - 1] = line_num + 1;
-                printf("\nunset branch encountered with the label %s and line number %d", br_labels[num_branches - 1], br_lines[num_branches - 1]);         
             }
         }
         if(label_dest && branch_found && first_scan ) {//this is to solve the instance of a label showing up after a line number, in a previously stored branch
-            printf("\nthe end of label %d is line number %d", branch_index, line_num);
             br_lines[branch_index] -= line_num;
         } 
         if(label_val && first_scan && !branch_found) {//a label and a new branch, store value
@@ -213,7 +216,6 @@ char *getInstruction(char *line, char **br_labels, int *br_lines) {
                 br_labels = (char **)realloc(br_labels, sizeof(char *) * max_branches);
                 br_lines = (int *)realloc(br_lines, sizeof(int) * max_branches);  
             }
-            printf("\nthe new label value is %s", tokenPtr);
             br_labels[num_branches] = malloc(strlen(tokenPtr) + 1);//length of 9 for branch instruction 
             strcpy(br_labels[num_branches], tokenPtr);
             br_lines[num_branches] = 0;
