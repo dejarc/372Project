@@ -1,3 +1,8 @@
+/* TCSS 372B Winter 2016
+ * Mark Peters, Chris Dejarlais, Hunter Bennett
+ * Course Project LC2200
+ */
+
 #ifndef GUI_H_INCLUDED
 #define GUI_H_INCLUDED
 
