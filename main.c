@@ -38,17 +38,38 @@ void testSystem(LC2200_ LC2200) {
 
  	LC2200->debug = false;
  	LC2200->safety = true;
+	//start(LC2200, 'h');
+}
+
+static LC2200_ LC2200;
+
+static void step() {
+	start(LC2200, 's');
+}
+
+static void run() {
 	start(LC2200, 'h');
 }
 
+static void open_file(FILE *file) {
+	printf("%d", fgetc(file));
+    //
+    //
+}
+
 int main(int argc, char *argv[]) {
-	LC2200_ LC2200 = LC2200_ctor();
+	LC2200 = LC2200_ctor();
+
 	testSystem(LC2200);
 
 	Gui gui = gui_ctor();
 	gui_connect_pc(gui, &LC2200->pc->pc);
-	gui_connect_memory(gui, LC2200->mem->MEM, MAX_MEM);
+	//gui_connect_memory(gui, LC2200->mem->MEM, MAX_MEM);
+	gui_connect_memory(gui, LC2200->mem->MEM, 100);
 	gui_connect_registers(gui, LC2200->reg->REG, REG_NAMES, REG_NUM);
+	gui_connect_step(gui, &step);
+	gui_connect_run(gui, &run);
+	gui_connect_open_file(gui, &open_file);
 	gui_main();
 
 	return 0;
