@@ -14,8 +14,7 @@
 #include "mem.h"
 #include "ir.h"
 
-#define SAFETY_LIMIT 255
-#define USE_LESS 0
+#define SAFETY_LIMIT 1000
 
 typedef enum {
 	Dr, Ld, Wr
@@ -26,8 +25,9 @@ typedef enum {
 } component;
 
 typedef struct {
-	bit debug;
-	bit safety;
+	bit safetydebug;
+	bit statedebug;
+	bit microdebug;
 	bit clock;
 	bit z;
 	word cycle;
@@ -48,6 +48,7 @@ void LC2200_kill(LC2200_);
 void start(LC2200_, char);
 void setupcycle(LC2200_);
 void microstate(LC2200_);
+void calleesave(LC2200_);
 void debug(LC2200_);
 
 #endif

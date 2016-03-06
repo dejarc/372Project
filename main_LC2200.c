@@ -5,7 +5,7 @@
 
 #include <stdio.h>
 #include "LC2200.h"
-#include "asm.h"
+//#include "asm.h"
 //#pragma diag_suppress 28
 
 //const int MAX_MEM = 1000000;
@@ -17,11 +17,11 @@ int main(int argc, char *argv[]) {
 	printf("ready player one\n");
 	LC2200_ LC2200 = LC2200_ctor();
 	printf("computer built pronto\n");
-	uploadASM(LC2200, "input.txt");
-
-	if (true) return 0;
-	//testSystem(LC2200);
-	LC2200->debug = true;
+//	uploadASM(LC2200, "input.txt");
+	//
+//	if (true) return 0;
+	testSystem(LC2200);
+	//LC2200->debug = true;
 	printf("machine cooloff\n");
 	return 0;
 }
@@ -31,7 +31,7 @@ void uploadASM(LC2200_ LC2200, char* input) {
     char **binary;
     int rows = 0;
 	input_file = fopen(input, "r");
-    binary = getAllInstructions(input_file);
+//    binary = getAllInstructions(input_file);
     while(binary[rows] != NULL) {
         printf("\nassembly instruction at row %d is %s", rows, binary[rows]);
         rows++;
@@ -62,16 +62,23 @@ void testSystem(LC2200_ LC2200) {
  	LC2200->mem->MEM[13]= stow("0111 0000 0000 0000 0000 0000 0000 0000"); //halt (jumped)
  	LC2200->mem->MEM[14]= stow("0100 0110 0011 0000 0000 0000 0000 0001"); //mem[reg3+1] = reg6
  	LC2200->mem->MEM[15]= stow("0111 0000 0000 0000 0000 0000 0000 0000"); //halt (overwritten)
- 	LC2200->mem->MEM[16]= stow("0101 0000 0000 0000 0000 0000 0000 0011"); //beq->pc18
+ 	LC2200->mem->MEM[16]= stow("0101 0000 0000 0000 0000 0000 0000 0011"); //beq->pc19
  	LC2200->mem->MEM[17]= stow("0111 0000 0000 0000 0000 0000 0000 0000"); //halt
  	LC2200->mem->MEM[18]= stow("0111 0000 0000 0000 0000 0000 0000 0000"); //halt
  	LC2200->mem->MEM[19]= stow("0111 0000 0000 0000 0000 0000 0000 0000"); //halt (overwritten)
- 	LC2200->mem->MEM[20]= stow("0111 0000 0000 0000 0000 0000 0000 0000"); //halt
+ 	LC2200->mem->MEM[20]= stow("0110 0000 0000 0000 0000 0000 0001 1000"); //jump pc24
+ 	LC2200->mem->MEM[21]= stow("0111 0000 0000 0000 0000 0000 0000 0000"); //halt
+ 	LC2200->mem->MEM[22]= stow("0111 0000 0000 0000 0000 0000 0000 0000"); //halt
+ 	LC2200->mem->MEM[23]= stow("0111 0000 0000 0000 0000 0000 0000 0000"); //halt
+ 	LC2200->mem->MEM[24]= stow("0010 1000 1000 0000 0000 0000 0100 0000"); //reg8=reg8+64
+	LC2200->mem->MEM[25]= stow("0111 0000 0000 0000 0000 0000 0000 0000"); //halt
  	LC2200->mem->MEM[50]= stow("0111 0000 0000 0000 0000 0000 0000 0000"); //emergency halt
 
- 	LC2200->debug = true;
- 	LC2200->safety = true;
+// 	LC2200->safetydebug = true;
+// 	LC2200->microdebug = true;
+// 	LC2200->statedebug = true;
 	start(LC2200, 'h');
+//	debug(LC2200);
 	LC2200_kill(LC2200);
 }
 //	int w;

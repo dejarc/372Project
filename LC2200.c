@@ -8,10 +8,10 @@
 word bus;
 
 LC2200_ LC2200_ctor() {
-	int useless = 0;
 	littlecomputer2200 *LC2200 = malloc(sizeof(littlecomputer2200));
-	LC2200->debug = false;
-	LC2200->safety = false;
+	LC2200->safetydebug = false;
+	LC2200->statedebug = false;
+	LC2200->microdebug = false;
 	LC2200->clock = false;
 	LC2200->z = false;
 	LC2200->cycle = 0;
@@ -22,16 +22,6 @@ LC2200_ LC2200_ctor() {
 	LC2200->mem = mem_ctor();
 	LC2200->ir = ir_ctor();
 	bus = 0;
-//			{ 0,
-//									 fsm_ctor()
-////									 ,
-////									 pc_ctor(),
-////									 alu_ctor(),
-////									 reg_ctor(),
-////								     mem_ctor(),
-////									 ir_ctor()
-//								};
-//	LC2200_ lcp = &LC2200;
 	return LC2200;
 }
 
@@ -57,15 +47,19 @@ void start(LC2200_ LC2200, char mode) {
 	LC2200->clock = true;
 	while (LC2200->clock) {
 		setupcycle(LC2200);
-		//debug(LC2200);
 		microstate(LC2200);
-		if (LC2200->debug) debug(LC2200);
-		if (LC2200->safety) if (tick++ >= SAFETY_LIMIT) LC2200->clock = false;
 		if (LC2200->pc->pc == LC2200->cycle) LC2200->clock = false;
+		if (LC2200->safetydebug) {
+			printf("TICK:%d\n", ++tick);
+			if (tick >= SAFETY_LIMIT) LC2200->clock = false;
+		}
+		if (LC2200->microdebug) debug(LC2200);
+		else if (LC2200->statedebug && LC2200->fsm->state == 0) debug(LC2200);
 	}
 }
 
 void setupcycle(LC2200_ LC2200) {
+	bit debug = LC2200->microdebug;
 	int bit;
 	word temp;
 	word *rom = LC2200->fsm->ROM;
@@ -79,7 +73,8 @@ void setupcycle(LC2200_ LC2200) {
 	for (bit = 0; bit < nslen; bit++) nstate[bit] = ' ';
 	opcode[oplen] = 0;
 	nstate[nslen] = 0;
-	printf("state:%s\nopcode:%s\nnstate:%s\n", wtos(state), opcode, nstate);
+	if (debug) printf("state:%s\n", wtos(state));
+
 	for (bit = PC_DR; bit <= OFF_DR; bit++)
 		switch(bit) {
 			case PC_DR:		LC2200->pc->DrPC	= bitt(rom[state], PC_DR);	break;
@@ -105,114 +100,74 @@ void setupcycle(LC2200_ LC2200) {
 			case MEM_WR:	LC2200->mem->WrMEM	= bitt(rom[state], MEM_WR);	break;
 			case REG_WR:	LC2200->reg->WrREG	= bitt(rom[state], REG_WR);	break;
 		}
+
 	for (bit = 0; bit < NUM_FUNC; bit++) LC2200->alu->func[bit] = false;
-
 	LC2200->alu->func[bits(rom[state], ALU_FN, ALU_FN+2)] = true;
-
-	printf("bitsirreg:%lu\n", bits(rom[state], IR_REG, IR_REG+1));
 	LC2200->reg->regno = ir_reg(LC2200->ir, bits(rom[state], IR_REG, IR_REG+1));
 
 
-	if (bitt(rom[state], S_O)) {
-//		temp = ir_opc(LC2200->ir);
-		printf("irreg: %s\n", wtos(temp));
-		for (bit = 0; bit < oplen; bit++) {
+	if (bitt(rom[state], S_O))
+		for (bit = 0; bit < oplen; bit++)
 			opcode[bit] = bitt(LC2200->ir->instruction, bit)+'0';
-			printf("%d",bitt(LC2200->ir->instruction, bit)+'0');
-		}
-	}
-	printf("nextopcode:%s\n", opcode);
-	printf("zval:%d\n", bitt(rom[state+1], Z_VAL));
-	if (bitt(rom[state], S_Z)) {
-//		alu_asub(LC2200->alu);
-//		LC2200->z = 0;
+
+	if (bitt(rom[state], S_Z))
 		zvalue = bitt(rom[state+1], Z_VAL);
-		printf("ZVALUE: %d\n", zvalue);
-//		LC2200->clock = false;
-	}
 
 	if (bitt(rom[state], S_S)) {
-		for (bit = 0; bit < nslen; bit++) {
+		for (bit = 0; bit < nslen; bit++)
 			nstate[bit] = bitt(rom[state], MICS_0+bit)+'0';
-			printf("%c",bitt(rom[state], MICS_0+bit)+'0');
-		}
-		printf("nextbefore:%s\n", wtos(stow(nstate)));
 		temp = stow(nstate) + 1;
-		printf("incrd:%d\n", temp);
-		printf("incrs:%s\n", wtos(bits(temp, WORD_LEN - MICS_0, WORD_LEN - 1)));
 		for (bit = 0; bit < nslen; bit++)
 			nstate[bit] = bitt(temp, WORD_LEN - MICS_0 + bit)+'0';
 	}
 
+	if (bitt(rom[state], CALLEE_SAVE)) calleesave(LC2200);
 
-
-	if (bitt(rom[state], CALLEE_SAVE)) //initiatecalleesave
-		4 + 54;
-
-	printf("next:%s\n", nstate);
-//	printf("next: %s: %s\n", wtos(bits(stow(next), WORD_LEN - MICS_0, WORD_LEN-1)), wtos(stow(next)));//, MICRO_S, MICRO_S+4));
-	if (bits(rom[state], OPCD_0, OPCD_1) ==
-			bits(rom[ROM_SIZE-1], OPCD_0, OPCD_1))
+	if (bits(rom[state], OPCD_0, OPCD_1) == bits(rom[ROM_SIZE-1], OPCD_0, OPCD_1))
 		LC2200->clock = false;
 
-//	if (state == 26) LC2200->clock = false;
+	if (debug) {
+		printf("bitsirreg:%lu\n", bits(rom[state], IR_REG, IR_REG+1));
+		printf("nextopcode:%s\n", opcode);
+		printf("zval:%d\n", bitt(rom[state+1], Z_VAL));
+		printf("next:%s\n", nstate);
+		if (LC2200->clock == false) printf("HALT ON LINE %lu\n", LC2200->pc->pc);
+	}
 
 	temp = 0;
 	state = 0;
-	printf("%s\n", opcode);
-	if (opcode[0] != ' ') {
-		printf("temp:%lu state: %lu\n", temp, state);
+	if (opcode[0] != ' ')
 		for (state = temp; state < ROM_SIZE; state++) {
-//			printf("state: %d: %s opcd: %s\n", state, wtos(bits(rom[state], OPCD_0, OPCD_1)), wtos(bits(stow(next), WORD_LEN - MICS_1, WORD_LEN - OPCD_1)));
-//			printf("state: %d: %lu opcd: %lu\n", state, bits(rom[state], OPCD_0, OPCD_1), bits(stow(next), WORD_LEN - MICS_1, WORD_LEN - OPCD_1));
-			printf("state: %d: %s opcd: %s\n", state, wtos(bits(rom[state], OPCD_0, OPCD_1)), wtos(stow(opcode)));
-			printf("state: %d: %lu opcd: %lu\n", state, bits(rom[state], OPCD_0, OPCD_1), stow(opcode));
-			if (bits(rom[state], OPCD_0, OPCD_1) ==
-					stow(opcode)) {
-//					bits(stow(next), WORD_LEN - MICS_1, WORD_LEN - OPCD_1)){
+			if (debug) printf("state: %d: %s opcd: %s\n", state, wtos(bits(rom[state], OPCD_0, OPCD_1)), wtos(stow(opcode)));
+			if (debug) printf("state: %d: %lu opcd: %lu\n", state, bits(rom[state], OPCD_0, OPCD_1), stow(opcode));
+			if (bits(rom[state], OPCD_0, OPCD_1) ==	stow(opcode)) {
 				temp = state;
 				break;
 			}
 		}
-	}
 
-	if (zvalue != ' ') {
-		printf("temp:%lu state: %lu\n", temp, state);
+	if (zvalue != ' ')
 		for (state = temp; state < ROM_SIZE; state++) {
-			printf("state: %d: %s zval: %s\n", state, wtos(bitt(rom[state], Z_VAL)), wtos(zvalue));
-			printf("state: %d: %lu zval: %lu\n", state, bitt(rom[state], Z_VAL), zvalue);
+			if (debug) printf("state: %d: %s zval: %s\n", state, wtos(bitt(rom[state], Z_VAL)), wtos(zvalue));
+			if (debug) printf("state: %d: %lu zval: %lu\n", state, bitt(rom[state], Z_VAL), zvalue);
 			if (bitt(rom[state], Z_VAL) == LC2200->z) {
 				temp = state;
 				break;
 			}
 		}
-	}
 
-	printf("%s\n", nstate);
-	if (nstate[0] != ' ') {
-		printf("temp:%lu state: %lu\n", temp, state);
+	if (nstate[0] != ' ')
 		for (state = temp; state < ROM_SIZE; state++) {
-//			printf("state: %d: %s next: %s\n", state, wtos(bits(rom[state], MICS_0, MICS_1)), wtos(bits(stow(next), WORD_LEN - MICS_0, WORD_LEN-1)));
-//			printf("state: %d: %lu next: %lu\n", state, bits(rom[state], MICS_0, MICS_1), bits(stow(next), WORD_LEN - MICS_0, WORD_LEN-1));
-			printf("state: %d: %s next: %s\n", state, wtos(bits(rom[state], MICS_0, MICS_1)), wtos(stow(nstate)));
-			printf("state: %d: %lu next: %lu\n", state, bits(rom[state], MICS_0, MICS_1), stow(nstate));
-			if (bits(rom[state], MICS_0, MICS_1) ==
-					stow(nstate)) {
-//					bits(stow(next), WORD_LEN - MICS_0, WORD_LEN-1)) {
+			if (debug) printf("state: %d: %s next: %s\n", state, wtos(bits(rom[state], MICS_0, MICS_1)), wtos(stow(nstate)));
+			if (debug) printf("state: %d: %lu next: %lu\n", state, bits(rom[state], MICS_0, MICS_1), stow(nstate));
+			if (bits(rom[state], MICS_0, MICS_1) ==	stow(nstate)) {
 				temp = state;
 				break;
 			}
 		}
-	}
 
 	LC2200->fsm->state = temp;
 
-	// check for next microstate to advance to
-	//	LC2200->fsm->state++;
-
-	//line to read previous and update next state
-	//line or whatever to set next finite state machine state
-//	setup(LC2200);
 }
 
 
@@ -254,19 +209,18 @@ void microstate(LC2200_ LC2200) {
 					case Wr: LC2200->z = bus == 0;	break;
 				}; break;
 				default: break;
-//				case _bus:	switch(signal) {
-//					case Dr:
-//					case Ld: reg_Ld(LC2200->reg);	break;
-//					case Wr: 						break;
-//				}; break;
 			}
+}
+
+void calleesave(LC2200_ LC2200) {
+
 }
 
 void debug(LC2200_ LC2200) {
 	bit showrom = false;
 	bit showres = false;
 	bit showcal = false;
-	word showmem = 21;
+	word showmem = 25;
 	int w;
 	printf("--------\n");
 	printf("bus: %s: %lu\n", wtos(bus), bus);
@@ -292,7 +246,6 @@ void debug(LC2200_ LC2200) {
     printf("REG: Dr: %lu\n", LC2200->reg->DrREG);
     printf("REG: Wr: %lu\n", LC2200->reg->WrREG);
     printf("REG: regno: %lu\n", LC2200->reg->regno);
-//    for(w = 0; w < REG_LOG; w++) printf("REG: regno %d: %lu\n", w, LC2200->reg->regno[w]);
     if (showres) for(w = 0; w < REG_NUM; w++) printf("REG: reserved %d: %lu\n", w, LC2200->reg->reserved[w]);
     if (showcal) for(w = 0; w < REG_NUM; w++) printf("REG: calleesave %d: %lu\n", w, LC2200->reg->calleesave[w]);
     for(w = 0; w < REG_NUM; w++) printf("REG: reg %d: %s: %lu\n", w, wtos(LC2200->reg->REG[w]), LC2200->reg->REG[w]);
@@ -310,13 +263,6 @@ void debug(LC2200_ LC2200) {
 	printf("--------\n");
 	printf("--------\n");
 	printf("--------\n");
-	printf("%s\n", wtos(LC2200->fsm->ROM[0]));
-	printf("%s\n", wtos(bits(LC2200->fsm->ROM[0], 16, 31)));
-	for(w = 0; w < WORD_LEN; w++)
-	printf("%d", bitt(LC2200->fsm->ROM[0], w));
-
 	printf("\n");
-	//start(LC2200, 'x', 1000);
-	w = 0;
 
 }

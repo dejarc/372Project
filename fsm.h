@@ -7,7 +7,7 @@
 #define FSM_H
 #include "bit.h"
 
-#define ROM_SIZE 30
+#define ROM_SIZE 32
 #define OPCD_0 0
 #define OPCD_1 3
 #define Z_VAL 4
