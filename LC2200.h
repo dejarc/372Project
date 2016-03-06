@@ -14,6 +14,8 @@
 #include "mem.h"
 #include "ir.h"
 
+#define SAFETY_LIMIT 255
+
 typedef enum {
 	Dr, Ld, Wr
 } signal;
@@ -23,6 +25,8 @@ typedef enum {
 } component;
 
 typedef struct {
+	bit debug;
+	bit safety;
 	bit clock;
 	bit z;
 	word cycle;

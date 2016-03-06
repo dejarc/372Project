@@ -9,6 +9,8 @@ word bus;
 
 LC2200_ LC2200_ctor() {
 	littlecomputer2200 *LC2200 = malloc(sizeof(littlecomputer2200));
+	LC2200->debug = false;
+	LC2200->safety = false;
 	LC2200->clock = false;
 	LC2200->z = false;
 	LC2200->cycle = 0;
@@ -44,7 +46,7 @@ void LC2200_kill(LC2200_ LC2200) {
 }
 
 void start(LC2200_ LC2200, char mode) {
-	int count = 0;
+	int tick = 0;
 	//once fully coded, char will be modes of single step, loop step,
 	//										  run-until-breakpoint,
 	//									      run-until-label,
@@ -56,9 +58,8 @@ void start(LC2200_ LC2200, char mode) {
 		setupcycle(LC2200);
 		//debug(LC2200);
 		microstate(LC2200);
-		debug(LC2200);
-		count++;
-//		if (count == 20) LC2200->clock = false;
+		if (LC2200->debug) debug(LC2200);
+		if (LC2200->safety) if (tick++ >= SAFETY_LIMIT) LC2200->clock = false;
 		if (LC2200->pc->pc == LC2200->cycle) LC2200->clock = false;
 	}
 }
@@ -94,7 +95,8 @@ void setupcycle(LC2200_ LC2200) {
 			case B_LD:		LC2200->alu->LdB	= bitt(rom[state], B_LD);	break;
 			case MAR_LD:	LC2200->mem->LdMAR	= bitt(rom[state], MAR_LD);	break;
 			case IR_LD:		LC2200->ir->LdIR	= bitt(rom[state], IR_LD);	break;
-			case Z_LD:		LC2200->z			= bus == 0;					break;
+			case Z_LD:		if (bitt(rom[state], Z_LD)) { alu_asub(LC2200->alu);
+								LC2200->z = bus == 0; }						break;
 		}
 
 	for (bit = MEM_WR; bit <= REG_WR; bit++)
@@ -119,9 +121,14 @@ void setupcycle(LC2200_ LC2200) {
 		}
 	}
 	printf("nextopcode:%s\n", opcode);
-
-	if (bitt(rom[state], S_Z))
-		zvalue = bitt(rom[state], Z_VAL)+'0';
+	printf("zval:%d\n", bitt(rom[state+1], Z_VAL));
+	if (bitt(rom[state], S_Z)) {
+//		alu_asub(LC2200->alu);
+//		LC2200->z = 0;
+		zvalue = bitt(rom[state+1], Z_VAL);
+		printf("ZVALUE: %d\n", zvalue);
+//		LC2200->clock = false;
+	}
 
 	if (bitt(rom[state], S_S)) {
 		for (bit = 0; bit < nslen; bit++) {
@@ -147,6 +154,7 @@ void setupcycle(LC2200_ LC2200) {
 			bits(rom[ROM_SIZE-1], OPCD_0, OPCD_1))
 		LC2200->clock = false;
 
+//	if (state == 26) LC2200->clock = false;
 
 	temp = 0;
 	state = 0;
@@ -167,12 +175,17 @@ void setupcycle(LC2200_ LC2200) {
 		}
 	}
 
-	if (zvalue != ' ')
-		for (state = temp; state < ROM_SIZE; state++)
+	if (zvalue != ' ') {
+		printf("temp:%lu state: %lu\n", temp, state);
+		for (state = temp; state < ROM_SIZE; state++) {
+			printf("state: %d: %s zval: %s\n", state, wtos(bitt(rom[state], Z_VAL)), wtos(zvalue));
+			printf("state: %d: %lu zval: %lu\n", state, bitt(rom[state], Z_VAL), zvalue);
 			if (bitt(rom[state], Z_VAL) == LC2200->z) {
 				temp = state;
 				break;
 			}
+		}
+	}
 
 	printf("%s\n", nstate);
 	if (nstate[0] != ' ') {
@@ -237,7 +250,7 @@ void microstate(LC2200_ LC2200) {
 				case _ir:	switch(signal) {
 					case Dr: ir_Dr(LC2200->ir);		break;
 					case Ld: ir_Ld(LC2200->ir);		break;
-					case Wr:						break;
+					case Wr: LC2200->z = bus == 0;	break;
 				}; break;
 				default: break;
 //				case _bus:	switch(signal) {
@@ -252,7 +265,7 @@ void debug(LC2200_ LC2200) {
 	bit showrom = false;
 	bit showres = false;
 	bit showcal = false;
-	word showmem = 10;
+	word showmem = 21;
 	int w;
 	printf("--------\n");
 	printf("bus: %s: %lu\n", wtos(bus), bus);
