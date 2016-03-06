@@ -8,6 +8,11 @@
 #define MAX_ROWS 5
 #define HEX_CONST 16
 
+const char *REG_NAMES[] = {"$zero", "$at", "$v0", "$a0", 
+                           "$a1", "$a2", "$t0", "$t1", 
+                           "$t2", "$s0", "$s1", "$s2",
+                           "$k0", "$sp", "$fp", "$ra"};
+
 static int arg_num;
 static int br_offset;
 static int hex_input;
@@ -251,24 +256,24 @@ char *getInstruction(char *line, char **br_labels, int *br_lines) {
     return new_line;
 }
  
-int main(int argc, char **argv) {
-    FILE *input_file;
-    char **bin_array;
-    int num_rows = 0;
-    int max_rows = MAX_ROWS;
-    if (argc > 1) {
-        input_file = fopen(argv[1], "r");
-    } else {
-        input_file = fopen("input.txt", "r");
-    }
-    //printf("\nsize of array is %d ", (int)strlen(bin_array));
-    bin_array = getAllInstructions(input_file);
-    while(bin_array[num_rows] != NULL) {
-        printf("\nassembly instruction at row %d is %s", num_rows, bin_array[num_rows]);
-        num_rows++;
-    }
-    return 0;
-}
+// int main(int argc, char **argv) {
+//     FILE *input_file;
+//     char **bin_array;
+//     int num_rows = 0;
+//     int max_rows = MAX_ROWS;
+//     if (argc > 1) {
+//         input_file = fopen(argv[1], "r");
+//     } else {
+//         input_file = fopen("input.txt", "r");
+//     }
+//     //printf("\nsize of array is %d ", (int)strlen(bin_array));
+//     bin_array = getAllInstructions(input_file);
+//     while(bin_array[num_rows] != NULL) {
+//         printf("\nassembly instruction at row %d is %s", num_rows, bin_array[num_rows]);
+//         num_rows++;
+//     }
+//     return 0;
+//}
 
 
 
