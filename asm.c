@@ -3,20 +3,12 @@
  * Course Project LC2200
  */
 
-/*#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdbool.h>
-#include <stdint.h>*/
-//#define WORD_LEN 32
 #include "asm.h"
-#define NO_BR -9999
 #define IMM_VAL 20
 #define MAX_ROWS 5
 #define HEX_CONST 16
 
 static int arg_num;
-static char br_command[9];
 static int br_offset;
 static int hex_input;
 static int first_scan;
@@ -126,8 +118,6 @@ char **getAllInstructions(FILE *fp) {
     int max_rows = MAX_ROWS;
     max_branches = MAX_ROWS;
     num_branches = 0;
-    br_offset = NO_BR; 
-    strcpy(br_command, ""); 
     bin_array = malloc(MAX_ROWS * sizeof(WORD_LEN) * sizeof(char *)); 
     br_labels = malloc(MAX_ROWS * sizeof(char *)); 
     br_lines = malloc(MAX_ROWS * sizeof(int));
@@ -141,17 +131,10 @@ char **getAllInstructions(FILE *fp) {
         bin_array[num_rows] = getInstruction(line, br_labels, br_lines); 
         num_rows++; 
     }
-    if (br_offset == NO_BR) {//no branch in code, disregard
-        br_offset = 0;
-    }
     num_rows = 0;
     fseek(fp, 0, SEEK_SET); 
     first_scan = false;
     while (fgets(line, sizeof(line), fp)) {    
-        if(num_rows - 1 == max_rows) {
-            max_rows *= 2;
-            bin_array = (char **)realloc(bin_array, sizeof(char *) * max_rows); 
-        }
         bin_array[num_rows] = getInstruction(line, br_labels, br_lines);
         num_rows++;
         if(strcmp(bin_array[num_rows], "END") == 0) {
@@ -178,12 +161,21 @@ char *getInstruction(char *line, char **br_labels, int *br_lines) {
     char *tokenPtr = strtok(line, " ,:\n");
     arg_num = 0;
     hex_input = false;
+    int token_ctr = 0; 
     int branch_index;
     char *new_line = (char *)malloc(WORD_LEN + 1);
     initializeInst(new_line);
     int branch_found = false;
-    int line_num;
+    int line_num = 0;
+    int index = 0;
+    int prev_label = false;
     while(tokenPtr != NULL) {
+        //printf("\nthe token is %s", tokenPtr);
+        /*if(tokenPtr[strlen(tokenPtr) - 1] == ';' || tokenPtr[0] == ';') {
+            //printf("\nthe token is %s", tokenPtr);
+            return new_line;
+        }*/
+        token_ctr++;
         if(!branch_found) {
             branch_index = 0;//this is resetting the branch value at the wrong time
             while (branch_index < num_branches) {
@@ -200,30 +192,36 @@ char *getInstruction(char *line, char **br_labels, int *br_lines) {
         }
         if(strcmp(tokenPtr,".ORIG" ) == 0 || strcmp(tokenPtr,"lw" ) == 0 || strcmp(tokenPtr,"sw" ) == 0) 
             hex_input = true;
-        int br_test1 = (arg_num == 2) & (!(int)strtol(tokenPtr, NULL, 10)); 
-        int br_test2 = (tokenPtr[0] != '$') & br_test1;
-        int br_inst = br_test2 & (tokenPtr[0] != '.'); 
+        int label_val = (tokenPtr[0] < 91) & (tokenPtr[0] > 64);//used to identify a label, uppercase assumption
+        int label_dest = label_val & (token_ctr > 1);//assumption that, if a label is found and it does not exist in the first slot, it specifies a destination 
         if(!arg_num && (int)strtol(tokenPtr, NULL, 10)) {
             line_num = hexConvert((int)strtol(tokenPtr, NULL, 10));  
-            if (branch_found == true && first_scan) {
-                br_lines[branch_index] = line_num - (br_lines[branch_index]);
-                if(br_lines[branch_index] < 0)
-                    br_lines[branch_index] = 0;
+            if (branch_found == true && first_scan) {//a line number shows up after a label. in this case the result is branch forward operation
+                br_lines[branch_index] = line_num - (br_lines[branch_index]);//line number shows up after a label, store the difference
+            } else if(num_branches > 0 && br_lines[num_branches - 1] == 0 && first_scan) {// branch value not set, set value here
+                br_lines[num_branches - 1] = line_num + 1;
+                printf("\nunset branch encountered with the label %s and line number %d", br_labels[num_branches - 1], br_lines[num_branches - 1]);         
             }
         }
-        if(br_inst && first_scan) {
+        if(label_dest && branch_found && first_scan ) {//this is to solve the instance of a label showing up after a line number, in a previously stored branch
+            printf("\nthe end of label %d is line number %d", branch_index, line_num);
+            br_lines[branch_index] -= line_num;
+        } 
+        if(label_val && first_scan && !branch_found) {//a label and a new branch, store value
             if(num_branches == max_branches - 1) {
                 max_branches *= 2;
                 br_labels = (char **)realloc(br_labels, sizeof(char *) * max_branches);
                 br_lines = (int *)realloc(br_lines, sizeof(int) * max_branches);  
             }
-            br_labels[num_branches] = malloc(9);//length of 9 for branch instruction 
+            printf("\nthe new label value is %s", tokenPtr);
+            br_labels[num_branches] = malloc(strlen(tokenPtr) + 1);//length of 9 for branch instruction 
             strcpy(br_labels[num_branches], tokenPtr);
-            br_lines[num_branches] = line_num + 1;
-            num_branches++;  
-            strcpy(br_command, tokenPtr);
-            //br_offset = line_num * -1;
-        } else if(br_inst && !first_scan) {//use precompted values on second go 
+            br_lines[num_branches] = 0;
+            if(line_num > 0) {
+               br_lines[num_branches] = line_num + 1;//if label at end of line, initialize value 
+            }
+            num_branches++;
+        } else if(label_val && !first_scan && label_dest) {//use precompted values on second go 
             int index;
             //printf("\nbranch encountered with the label %s and line number %d", br_labels[num_branches - 1], br_lines[branch_index]);  
             for(index = 0; index < IMM_VAL; index++) {
@@ -233,10 +231,17 @@ char *getInstruction(char *line, char **br_labels, int *br_lines) {
             }   
         } 
         parseInput(tokenPtr, new_line);
+        if(tokenPtr[strlen(tokenPtr) - 1] == ';' || tokenPtr[0] == ';') {
+            //printf("\nthe token is %s", tokenPtr);
+            return new_line;
+        }
         tokenPtr = strtok(NULL, " ,:()\n");
     }
-    if(first_scan)//initial scan, return empty string 
+    if(first_scan) {//initial scan, return empty string 
+        free(new_line);
         return "";
+    
+    }
     return new_line;
 }
  
