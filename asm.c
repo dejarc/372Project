@@ -138,16 +138,18 @@ char **getAllInstructions(FILE *fp) {
     while (fgets(line, sizeof(line), fp)) {    
         bin_array[num_rows] = getInstruction(line, br_labels, br_lines);
         strcpy(temp_word, bin_array[num_rows]);
-        if(strcmp(bin_array[num_rows], "END") == 0) {
-            char * temp = bin_array[num_rows];
-            bin_array[num_rows] = NULL;
-            free(temp);
-            break;
+        if(strcmp(bin_array[num_rows],"COMMENT") != 0) {
+            if(strcmp(bin_array[num_rows], "END") == 0) {
+                char * temp = bin_array[num_rows];
+                bin_array[num_rows] = NULL;
+                free(temp);
+                break;
+            }
+            for(index = 0; index < WORD_LEN; index++) {
+                bin_array[num_rows][index] = temp_word[(WORD_LEN - 1) - index];
+            }
+            num_rows++;
         }
-        for(index = 0; index < WORD_LEN; index++) {
-            bin_array[num_rows][index] = temp_word[(WORD_LEN - 1) - index];
-        }
-        num_rows++;
     }
     free(temp_word);
     return bin_array;
@@ -234,7 +236,9 @@ char *getInstruction(char *line, char **br_labels, int *br_lines) {
         } 
         parseInput(tokenPtr, new_line);
         if(tokenPtr[strlen(tokenPtr) - 1] == ';' || tokenPtr[0] == ';') {
-            //printf("\nthe token is %s", tokenPtr);
+            if(token_ctr == 1) {
+                return "COMMENT";
+            }
             return new_line;
         }
         tokenPtr = strtok(NULL, " ,:()\n");
@@ -247,7 +251,7 @@ char *getInstruction(char *line, char **br_labels, int *br_lines) {
     return new_line;
 }
  
-int debugCommandLine(int argc, char **argv) {
+int main(int argc, char **argv) {
     FILE *input_file;
     char **bin_array;
     int num_rows = 0;
@@ -263,7 +267,6 @@ int debugCommandLine(int argc, char **argv) {
         printf("\nassembly instruction at row %d is %s", num_rows, bin_array[num_rows]);
         num_rows++;
     }
-    hexConvert(2002);
     return 0;
 }
 
