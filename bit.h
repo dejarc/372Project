@@ -15,6 +15,7 @@
 
 typedef _Bool bit;
 typedef uint32_t word;
+typedef int32_t aluw;
 
 extern word bus;
 

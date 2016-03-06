@@ -20,7 +20,7 @@ typedef struct {
 	word regno;
 	bit reserved[REG_NUM];
 	bit calleesave[REG_NUM];
-	word registers[REG_NUM];
+	word REG[REG_NUM];
 } registerfile;
 
 typedef registerfile *reg_;

@@ -8,9 +8,11 @@
 #include "bit.h"
 
 #define ROM_SIZE 30
-#define OP_CODE 0
-#define Z_VALUE 4
-#define MICRO_S 5
+#define OPCD_0 0
+#define OPCD_1 3
+#define Z_VAL 4
+#define MICS_0 5
+#define MICS_1 9
 #define PC_DR 10
 #define ALU_DR 11
 #define REG_DR 12

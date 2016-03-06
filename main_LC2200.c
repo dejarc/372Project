@@ -24,10 +24,14 @@ int main(int argc, char *argv[]) {
 
 void testSystem(LC2200_ LC2200) {
 //	debug(LC2200);
-	LC2200->pc->pc = 1;
-	LC2200->mem->MEM[1] = stow("0010 0000 0000 0000 0000 0000 0000 0011");
-	LC2200->mem->MEM[2] = stow("0010 0001 0001 0000 0000 0000 0000 0100");
-	LC2200->mem->MEM[3] = stow("0111 0000 0000 0000 0000 0000 0000 0000");
+	LC2200->pc->pc = 0;
+	LC2200->reg->REG[3] = stow("0000 0000 0000 0000 0000 0000 0000 1110"); //reg3 starts at 14
+	LC2200->mem->MEM[1] = stow("0010 0101 0011 1111 1111 1111 1111 1100"); //reg5 =adds -4 to reg3
+	LC2200->mem->MEM[2] = stow("0010 1010 0011 0000 0000 0000 0000 0100"); //reg10=adds 4  to reg3
+ 	LC2200->mem->MEM[3] = stow("0000 0000 0000 0000 0000 0000 0000 0101"); //attempts to add reg5 to $zero
+ 	LC2200->mem->MEM[4] = stow("0000 1110 0011 0000 0000 0000 0000 0101"); //reg14=reg3+reg5
+ 	LC2200->mem->MEM[5] = stow("0001 0010 0011 0000 0000 0000 0000 0011"); //nand
+ 	LC2200->mem->MEM[6] = stow("0111 0000 0000 0000 0000 0000 0000 0000"); //halt
 	start(LC2200, 'h');
 	LC2200_kill(LC2200);
 }

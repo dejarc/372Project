@@ -20,6 +20,8 @@ void ir_kill(ir_);
 void ir_Dr(ir_);
 void ir_Ld(ir_);
 
+//word ir_imm(ir_);
+word ir_opc(ir_);
 word ir_reg(ir_, word);
 
 #endif

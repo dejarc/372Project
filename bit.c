@@ -8,13 +8,18 @@ word bits(word myBits, int beg, int end) {
     int index;
     int bit;
     if (ending >= starting && ending < 32) {
-        for(index = 0; index <= ending - starting; index++) {
-            bit = myBits >> (WORD_LEN - 1 - starting - index) & 1;
-//        	printf("bit:%lu\n", bit);
-            temp_word ^= bit << (ending - starting) - index;
-            //printf("value of bit %d is %d\n", starting + index, bit);
-        } 
-        return temp_word;
+    	for (index = 0; index <= ending - starting; index++) {
+//    		printf("index: %d bit: %d\n", index, bitt(myBits, index+starting));
+    		temp_word ^= bitt(myBits, index+starting) << WORD_LEN - (WORD_LEN -(ending-starting)+index);
+    	}
+    	return temp_word;
+//        for(index = 0; index <= ending - starting; index++) {
+//            bit = myBits >> (WORD_LEN - 1 - starting - index) & 1;
+////        	printf("bit:%lu\n", bit);
+//            temp_word ^= bit >> (ending - starting) - index;
+//            //printf("value of bit %d is %d\n", starting + index, bit);
+//        }
+//        return temp_word;
     }    
     printf("\nend bit must be greater than or equal to start bit!");
     return  0;

@@ -13,8 +13,8 @@ typedef struct {
 	bit DrALU;
 	bit LdA;
 	bit LdB;
-	word A;
-	word B;
+	aluw A;
+	aluw B;
 	bit func[NUM_FUNC];
 } arithmeticlogicunit;
 

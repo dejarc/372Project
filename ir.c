@@ -19,16 +19,25 @@ void ir_kill(ir_ ir) {
 }
 
 void ir_Dr(ir_ ir) {
-	if (ir->DrOFF) bus = ir->instruction;//sigx(ir->instruction, 19);
+	if (ir->DrOFF) bus = sigx(bits(ir->instruction, 12, 31), bitt(ir->instruction, 12));
+//			ir->instruction;//sigx(ir->instruction, 19);
 }
 
 void ir_Ld(ir_ ir) {
 	if (ir->LdIR) ir->instruction = bus;
 }
 
+word ir_opc(ir_ ir) {
+	return bits(ir->instruction, 0, 3);
+}
+
+//word ir_imm(ir_ ir) {
+//
+//}
+
 word ir_reg(ir_ ir, word reg) {
-	if (reg == 0) return bits(ir->instruction, 4, 6);
-	if (reg == 1) return bits(ir->instruction, 7, 9);
-	if (reg == 2) return bits(ir->instruction, 29, 31);
+	if (reg == 0) return bits(ir->instruction, 4, 7);
+	if (reg == 1) return bits(ir->instruction, 8, 11);
+	if (reg == 2) return bits(ir->instruction, 28, 31);
 	return 0;
 }
