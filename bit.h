@@ -11,6 +11,9 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+/* DOESN'T DISPLAY ERRORS DUE TO UINT_32 WORD CAST */
+#pragma GCC diagnostic ignored "-Wformat"
+
 #define WORD_LEN 32
 
 typedef _Bool bit;

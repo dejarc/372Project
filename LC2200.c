@@ -93,7 +93,7 @@ void start(LC2200_ LC2200, char mode) {
 	//jump or branch
 	else if (mode == 'j') haltonjump = true;
 	//breakpoint (whatever the controller set it to, default 0)
-	else if (mode == 'b') 1;
+	else if (mode == 'b') tick = 0;
 	//wont' run
 	else {
 		printf("MODE REQUIRED: run until halt (h), step (s), jump (j), or "

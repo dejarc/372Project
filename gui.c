@@ -89,7 +89,8 @@ static void cell_data_func_binary(
     gtk_tree_model_get(tree_model, iter, 0, &ptr, -1);
     char binary_string[WORD_LEN + 1];
     word mask = 1 << (WORD_LEN - 1);
-    for (int i = 0; i < WORD_LEN; i++) {
+    int i;
+    for (i = 0; i < WORD_LEN; i++) {
         binary_string[i] = !!(*ptr & mask) + '0';
         mask >>= 1;
     }
@@ -287,7 +288,8 @@ Gui gui_ctor() {
 }
 
 void gui_connect_memory(Gui gui, word data[], word count) {
-    for (word i = 0; i < count; i++) {
+	word i;
+    for (i = 0; i < count; i++) {
         char address_string[WORD_LEN / 4 + 2];
         sprintf(address_string, "x%08X", i);
         gtk_list_store_insert_with_values(
@@ -307,7 +309,8 @@ void gui_connect_memory(Gui gui, word data[], word count) {
 }
 
 void gui_connect_registers(Gui gui, word data[], const char *names[], word count) {
-    for (word i = 0; i < count; i++) {
+	word i;
+    for (i = 0; i < count; i++) {
         gtk_list_store_insert_with_values(
                 gui->list_store_registers, NULL, -1, 0, &data[i], 1, names[i], 2, i, -1);
     }

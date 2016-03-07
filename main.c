@@ -16,6 +16,7 @@ static void step() {
 
 static void run() {
 	start(LC2200, 'h');
+	//
 }
 
 static void open_file(FILE *file) {

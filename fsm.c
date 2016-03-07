@@ -21,7 +21,6 @@
  */
 
 fsm_ fsm_ctor() {
-	int useless = 0;
 	int romaddress;
 	finitestatemachine *fsm = malloc(sizeof(finitestatemachine));
 	fsm->mode = false;

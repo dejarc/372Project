@@ -6,11 +6,10 @@ word bits(word myBits, int beg, int end) {
     //printf("starting index %d ending index %d\n", starting, ending);
     word temp_word = 0;
     int index;
-    int bit;
     if (ending >= starting && ending < 32) {
     	for (index = 0; index <= ending - starting; index++) {
 //    		printf("index: %d bit: %d\n", index, bitt(myBits, index+starting));
-    		temp_word ^= bitt(myBits, index+starting) << WORD_LEN - (WORD_LEN -(ending-starting)+index);
+    		temp_word ^= bitt(myBits, index+starting) << (WORD_LEN - (WORD_LEN -(ending-starting)+index));
     	}
     	return temp_word;
 //        for(index = 0; index <= ending - starting; index++) {
@@ -27,7 +26,7 @@ word bits(word myBits, int beg, int end) {
 
 bit bitt(word myWord, int bit) {
 	if (bit >= 32) return 0;
-    return myWord >> WORD_LEN - 1 - bit & 1;
+    return myWord >> (WORD_LEN - 1 - bit) & 1;
 }
 
 word stow(char *bitSequence) {
@@ -49,7 +48,7 @@ word stow(char *bitSequence) {
     while(char_index < strlen(bitSequence) && word_index < range) {
         char temp = bitSequence[char_index]; 
         if (temp == '1') {
-            temp_word ^= 1 << WORD_LEN -1- word_index;
+            temp_word ^= 1 << (WORD_LEN -1- word_index);
         }
         if (temp == '1' || temp == '0') {
             word_index++;
@@ -85,7 +84,7 @@ word sigx(word myWord, bit myBit) {
         index++;    
     }
     //printf("\nfirst index to start sign extension: %d", index);
-    for(index; index < WORD_LEN; index++)
+    for(; index < WORD_LEN; index++)
         temp_word ^= myBit << index; 
     for(index = 0; index < WORD_LEN; index++) {
         //printf("\nvalue at index %d is %d", index, temp_word >> index & 1);
