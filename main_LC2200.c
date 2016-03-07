@@ -10,39 +10,40 @@
 
 //const int MAX_MEM = 1000000;
 
-void uploadASM(LC2200_, char*);
-void testSystem(LC2200_);
+//void uploadASM(LC2200_, char*);
+//void testSystem(LC2200_);
 
-int main(int argc, char *argv[]) {
-	printf("ready player one\n");
-	LC2200_ LC2200 = LC2200_ctor();
-	printf("computer built pronto\n");
-//	uploadASM(LC2200, "input.txt");
-	//
-//	if (true) return 0;
-	testSystem(LC2200);
-	//LC2200->debug = true;
-	printf("machine cooloff\n");
-	return 0;
-}
+//int main(int argc, char *argv[]) {
+//	printf("ready player one\n");
+//	LC2200_ LC2200 = LC2200_ctor();
+//	printf("computer built pronto\n");
+////	uploadASM(LC2200, "input.txt");
+//	//
+////	if (true) return 0;
+//	testSystem(LC2200);
+//	//LC2200->debug = true;
+//	printf("machine cooloff\n");
+//	return 0;
+//}
 
-void uploadASM(LC2200_ LC2200, char* input) {
-	FILE *input_file;
-    char **binary;
-    int rows = 0;
-	input_file = fopen(input, "r");
-//    binary = getAllInstructions(input_file);
-    while(binary[rows] != NULL) {
-        printf("\nassembly instruction at row %d is %s", rows, binary[rows]);
-        rows++;
-    }
-//    LC2200->pc->pc = binary
-
-
-}
+//void uploadASM(LC2200_ LC2200, char* input) {
+//	FILE *input_file;
+//    char **binary;
+//    int rows = 0;
+//	input_file = fopen(input, "r");
+////    binary = getAllInstructions(input_file);
+//    while(binary[rows] != NULL) {
+//        printf("\nassembly instruction at row %d is %s", rows, binary[rows]);
+//        rows++;
+//    }
+////    LC2200->pc->pc = binary
+//
+//
+//}
 
 void testSystem(LC2200_ LC2200) {
-//	debug(LC2200);
+
+	debug(LC2200);
 	LC2200->pc->pc = 0;
 
 	LC2200->reg->REG[3] = stow("0000 0000 0000 0000 0000 0000 0000 1110"); //reg3 starts at 14
@@ -74,12 +75,10 @@ void testSystem(LC2200_ LC2200) {
 	LC2200->mem->MEM[25]= stow("0111 0000 0000 0000 0000 0000 0000 0000"); //halt
  	LC2200->mem->MEM[50]= stow("0111 0000 0000 0000 0000 0000 0000 0000"); //emergency halt
 
-// 	LC2200->safetydebug = true;
-// 	LC2200->microdebug = true;
-// 	LC2200->statedebug = true;
+ 	LC2200->safetydebug = true;
+ 	LC2200->statedebug = true;
+ 	LC2200->microdebug = true;
 	start(LC2200, 'h');
-//	debug(LC2200);
-	LC2200_kill(LC2200);
 }
 //	int w;
 ////	printf("%d\n", LC2200->fsm->rom[w]);

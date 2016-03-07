@@ -33,6 +33,16 @@
 #define S_S 30
 #define CALLEE_SAVE 31
 
+#define FETCH 0
+#define ADD 4
+#define NAND 7
+#define ADDI 10
+#define LW 13
+#define SW 17
+#define BEQ 21
+#define JALR 27
+#define HALT 31
+
 typedef struct {
 	bit mode;
 	word state;
@@ -42,11 +52,5 @@ typedef struct {
 typedef finitestatemachine *fsm_;
 fsm_ fsm_ctor();
 void fsm_kill(fsm_);
-
-//void fsm_tick(LC2200_);
-void fsm_signal(fsm_);
-void fsm_next(fsm_);
-void fsm_ir(fsm_);
-void fsm_z(fsm_);
 
 #endif

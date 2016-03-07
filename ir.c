@@ -31,10 +31,6 @@ word ir_opc(ir_ ir) {
 	return bits(ir->instruction, 0, 3);
 }
 
-//word ir_imm(ir_ ir) {
-//
-//}
-
 word ir_reg(ir_ ir, word reg) {
 	if (reg == 0) return bits(ir->instruction, 4, 7);
 	if (reg == 1) return bits(ir->instruction, 8, 11);
