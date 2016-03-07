@@ -19,6 +19,7 @@ void gui_connect_pc(Gui gui, word *pc);
 void gui_connect_run(Gui gui, void (*run)(void));
 void gui_connect_step(Gui gui, void (*step)(void));
 void gui_connect_open_file(Gui gui, void (*open_file)(FILE *));
+void gui_connect_asm_print(Gui gui, void (*asm_print)(char[], word));
 void gui_main();
 
 #endif // GUI_H_INCLUDED

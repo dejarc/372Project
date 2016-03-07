@@ -15,4 +15,6 @@ int hexConvert(int );
 char *getInstruction(char *, char**, int*); 
 int debugCommandLine(int, char **);
 
+void asm_print(char[], word);
+
 #endif

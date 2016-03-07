@@ -15,6 +15,7 @@ struct PRIVATE_GUI {
     void (*run)(void);
     void (*step)(void);
     void (*open_file)(FILE *);
+    void (*asm_print)(char[], word);
     GtkWidget *window;
         GtkWidget *box_vertical;
             GtkWidget *menu_bar;
@@ -132,10 +133,12 @@ static void cell_data_func_asm(
         GtkCellRenderer   *cell,
         GtkTreeModel      *tree_model,
         GtkTreeIter       *iter,
-        gpointer          data) {
-    gpointer ptr;
+        gpointer          gui) {
+    word *ptr;
     gtk_tree_model_get(tree_model, iter, 0, &ptr, -1);
-    g_object_set(G_OBJECT(cell), "text", "ADD $zero, $zero, $zero", NULL);
+    char buffer[35] = {0};
+    ((Gui) gui)->asm_print(buffer, *ptr);
+    g_object_set(G_OBJECT(cell), "text", buffer, NULL);
 }
 
 /* an instance of (*GCallback)
@@ -300,7 +303,7 @@ void gui_connect_memory(Gui gui, word data[], word count) {
             -1, "", renderer, &cell_data_func_binary, NULL, NULL);                         
     gtk_tree_view_insert_column_with_data_func(
             GTK_TREE_VIEW(gui->tree_view_memory),
-            -1, "", renderer, &cell_data_func_asm, NULL, NULL);
+            -1, "", renderer, &cell_data_func_asm, gui, NULL);
 }
 
 void gui_connect_registers(Gui gui, word data[], const char *names[], word count) {
@@ -340,6 +343,10 @@ void gui_connect_pc(Gui gui, word *pc) {
 
 void gui_connect_open_file(Gui gui, void (*open_file)(FILE *)) {
     gui->open_file = open_file;
+}
+
+void gui_connect_asm_print(Gui gui, void (*asm_print)(char[], word)) {
+    gui->asm_print = asm_print;
 }
 
 /* shows and starts the GUI
