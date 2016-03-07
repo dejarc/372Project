@@ -384,7 +384,6 @@ void debug(LC2200_ LC2200) {
 	printf("LC2200: z: %lu\n", LC2200->z);
 	printf("LC2200: cycle: %s: %lu\n", wtos(LC2200->cycle), LC2200->cycle);
 	printf("--------\n");
-	printf("FSM: mode: %lu\n", LC2200->fsm->mode);
 	printf("FSM: state: %s: %lu\n", wtos(LC2200->fsm->state), LC2200->fsm->state);
 	if (showrom) for (w = 0; w < ROM_SIZE; w++) printf("FSM: ROM %lu: %s: %lu\n", w, wtos(LC2200->fsm->ROM[w]), LC2200->fsm->ROM[w]);
 	printf("--------\n");

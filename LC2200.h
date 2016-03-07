@@ -39,7 +39,8 @@ typedef enum {
 
 /* littlecomputer (LC2200) struct
  * -----------------------------------------------------------------------------
- * The current component that the control unit is sending signals to.
+ * The setup of the LC2200, including all of the components and several bit
+ * switches for operations and debugging.
  */
 typedef struct {
 	bit safetydebug;

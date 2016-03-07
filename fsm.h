@@ -3,10 +3,14 @@
  * Course Project LC2200
  */
 
+/* HEADER FILE DEFINITION */
 #ifndef FSM_H
 #define FSM_H
+
+/* HEADERS */
 #include "bit.h"
 
+/* ROM BIT MACROS */
 #define ROM_SIZE 32
 #define OPCD_0 0
 #define OPCD_1 3
@@ -33,6 +37,7 @@
 #define S_S 30
 #define CALLEE_SAVE 31
 
+/* ROM OPCODE MACROS */
 #define FETCH 0
 #define ADD 4
 #define NAND 7
@@ -43,13 +48,21 @@
 #define JALR 27
 #define HALT 31
 
+/* finitestatemachine (fsm) struct
+ * -----------------------------------------------------------------------------
+ * Contains a word state, which is where in the ROM the current microstate is,
+ * and the ROM itself, which provides for the control unit information on what
+ * signals to send out for every microstate.
+ */
 typedef struct {
-	bit mode;
 	word state;
 	word ROM[ROM_SIZE];
 } finitestatemachine;
 
+/* POINTER */
 typedef finitestatemachine *fsm_;
+
+/* CONSTRUCTOR/DESTRUCTOR */
 fsm_ fsm_ctor();
 void fsm_kill(fsm_);
 

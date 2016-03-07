@@ -23,7 +23,6 @@
 fsm_ fsm_ctor() {
 	int romaddress;
 	finitestatemachine *fsm = malloc(sizeof(finitestatemachine));
-	fsm->mode = false;
 	fsm->state = 0;
 
 				   /* 	         code - ##### PARMO PABMIZ MR ## ## OZ+SC
