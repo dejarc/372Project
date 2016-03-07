@@ -35,9 +35,6 @@ void testSystem(LC2200_ LC2200) {
  	LC2200->mem->MEM[19]= stow("0111 0000 0000 0000 0000 0000 0000 0000"); //halt (overwritten)
  	LC2200->mem->MEM[20]= stow("0111 0000 0000 0000 0000 0000 0000 0000"); //halt
  	LC2200->mem->MEM[50]= stow("0111 0000 0000 0000 0000 0000 0000 0000"); //emergency halt
-
- 	LC2200->debug = false;
- 	LC2200->safety = true;
 	//start(LC2200, 'h');
 }
 
@@ -52,6 +49,7 @@ static void run() {
 }
 
 static void open_file(FILE *file) {
+    //
 	printf("%d", fgetc(file));
     //
     //
@@ -65,6 +63,7 @@ int main(int argc, char *argv[]) {
 	Gui gui = gui_ctor();
 	gui_connect_pc(gui, &LC2200->pc->pc);
 	//gui_connect_memory(gui, LC2200->mem->MEM, MAX_MEM);
+    gui_connect_asm_print(gui, &asm_print);
 	gui_connect_memory(gui, LC2200->mem->MEM, 100);
 	gui_connect_registers(gui, LC2200->reg->REG, REG_NAMES, REG_NUM);
 	gui_connect_step(gui, &step);
