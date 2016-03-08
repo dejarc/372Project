@@ -9,20 +9,17 @@
 /* GLOBAL DECLARATION OF BUS
  * -----------------------------------------------------------------------------
  * The bus acts as the system bus in the LC2200, responsible for carrying almost
- * all of its data*1. It is an external variable as declared by the
+ * all of its data. It is an external variable as declared by the
  * instructionsetarchitecture (bit)'s header file. With this usage, it is
- * immediate accessible to all components of the LC2200.
+ * immediate accessible to all components of the LC2200. It can be read from or
+ * written to by any part of the system when signaled by the control unit (the
+ * LC2200). See bit (.h) for more info.
  *
- * The bus can be read from and written to by all components, and is used in
- * this manner to simulate the transportation of information in 32 wires (one
- * word, as defined in bit's header file) when triggered by the control unit.
- * Almost every microstage involves the driving of a word onto the bus and the
- * reading and/or storage of that word elsewhere.
- *
- * *1 The LC2200 control unit can interact with the instructionregister (ir)
- *    and the arithmeticlogicunit (alu) directly for purposes of determining the
- *    next microstate to advance to using bits 28-31 of the finitestatemachine
- *    (fsm)'s current state.
+ * The bus/control-unit/component communicaiton is only broken for two reasons.
+ * The LC2200 control unit can interact with the instructionregister (ir) and
+ * the arithmeticlogicunit (alu) directly for purposes of determining the next
+ * microstate to advance to using bits 28-31 of the finitestatemachine (fsm)'s
+ * current state.
  */
 word bus;
 
@@ -40,6 +37,15 @@ word bus;
  * The control unit is responsible for setting the machine in its initial ready-
  * to-start stage. This consists of every possible value in the varous
  * components being set to 0 or equivalent (false, which in C is 0)--off.
+ *
+ * This is, in all respects, the brain of the machine. Each of the subcomponents
+ * have mostly skeletal code: primitive types (see instructionsetarchitecture
+ * (bit) for more info), and very short functions that simply update the struct
+ * values from the bus or vice versa. This is the handshake that the machine
+ * makes with its parts: you are to do nothing unless instructed--and then
+ * you are only responsible for exchanging data. The only component that
+ * vary slightly from this is the alu, although it is simply comprised on a few
+ * very short functions following the handshake rules as well.
  */
 LC2200_ LC2200_ctor() {
 	littlecomputer2200 *LC2200 = malloc(sizeof(littlecomputer2200));
@@ -110,6 +116,9 @@ void start(LC2200_ LC2200, char mode) {
 		/* FSM READ, SIGNAL FLIPS, FIND NEXT STATE */
 		setupcycle(LC2200);
 
+		/* DETERMINE NEXT STATE */
+		switchstate(LC2200);
+
 		/* DRIVE, LOAD, WRITE */
 		microstate(LC2200);
 
@@ -161,26 +170,6 @@ void setupcycle(LC2200_ LC2200) {
 	//state shortcut
 	word state = LC2200->fsm->state;
 
-	//opcode length
-	const int oplen = (OPCD_1 - OPCD_0)+1;
-	//next state length
-	const int nslen = (MICS_1 - MICS_0)+1;
-
-	//opcode
-	char opcode[oplen+1];
-	//z-value
-	char zvalue = ' ';
-	//next state
-	char nstate[nslen+1];
-
-	/* ARRAY VARIABLE ASSIGNMENT */
-	for (bit = 0; bit < oplen; bit++) opcode[bit] = ' ';
-	for (bit = 0; bit < nslen; bit++) nstate[bit] = ' ';
-	opcode[oplen] = 0;
-	nstate[nslen] = 0;
-
-	if (debug) printf("state:%s\n", wtos(state));
-
 	/* DRIVE SIGNALS */
 	for (bit = PC_DR; bit <= OFF_DR; bit++)
 		switch(bit) {
@@ -217,6 +206,49 @@ void setupcycle(LC2200_ LC2200) {
 	LC2200->alu->func[bits(rom[state], ALUFN_0, ALUFN_1)] = true;
 	LC2200->reg->regno = ir_reg(LC2200->ir, bits(rom[state], IRREG_0, IRREG_1));
 
+}
+
+/* CYCLE PHASE II
+ * -----------------------------------------------------------------------------
+ * Depending on the last four bits of the ROM state, the control unit will
+ * a series of elaborate check to determine what the next microstate will be.
+ * The factors effecting its decision are the instructionregister (ir)'s opcode
+ * value, the current state's 10 bits of state information, the z-value attached
+ * to the value of the bus, and additional constraints on the micro cycle. See
+ * the finitestatemachine (fsm) for more information.
+ */
+void switchstate(LC2200_ LC2200) {
+
+	/* VARIABLES */
+	//debug shortcut
+	bit debug = LC2200->microdebug;
+	//bit index
+	int bit;
+	//temp word (for conversions, comparisons
+	word temp;
+	//rom shortcut pointer
+	word *rom = LC2200->fsm->ROM;
+	//state shortcut
+	word state = LC2200->fsm->state;
+
+	//opcode length
+	const int oplen = (OPCD_1 - OPCD_0)+1;
+	//next state length
+	const int nslen = (MICS_1 - MICS_0)+1;
+
+	//opcode
+	char opcode[oplen+1];
+	//z-value
+	char zvalue = ' ';
+	//next state
+	char nstate[nslen+1];
+
+	/* ARRAY VARIABLE ASSIGNMENT */
+	for (bit = 0; bit < oplen; bit++) opcode[bit] = ' ';
+	for (bit = 0; bit < nslen; bit++) nstate[bit] = ' ';
+	opcode[oplen] = 0;
+	nstate[nslen] = 0;
+
 	/* OPCODE DETERMINATION */
 	if (bitt(rom[state], S_O))
 		for (bit = 0; bit < oplen; bit++)
@@ -243,6 +275,7 @@ void setupcycle(LC2200_ LC2200) {
 		LC2200->clock = false;
 
 	if (debug) {
+		printf("state:%s\n", wtos(state));
 		printf("bitsirreg:%lu\n", bits(rom[state], IRREG_0, IRREG_1));
 		printf("nextopcode:%s\n", opcode);
 		printf("zval:%d\n", bitt(rom[state+1], Z_VAL));
@@ -297,7 +330,7 @@ void setupcycle(LC2200_ LC2200) {
 
 }
 
-/* CYCLE PHASE II
+/* CYCLE PHASE III
  * -----------------------------------------------------------------------------
  * For each stage in the drive-load-write progression, sends out an activation
  * signal to each component. If that component's respective signal is flipped

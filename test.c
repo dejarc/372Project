@@ -3,6 +3,10 @@
  * Course Project LC2200
  */
 
+/*
+ * Messy testy codes.
+ */
+
 #include <stdio.h>
 #include "LC2200.h"
 #include "asm.h"
