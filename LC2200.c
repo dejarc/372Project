@@ -214,8 +214,8 @@ void setupcycle(LC2200_ LC2200) {
 
 	/* ALU & REG MULTIPLEXOR */
 	for (bit = 0; bit < NUM_FUNC; bit++) LC2200->alu->func[bit] = false;
-	LC2200->alu->func[bits(rom[state], ALU_FN, ALU_FN+2)] = true;
-	LC2200->reg->regno = ir_reg(LC2200->ir, bits(rom[state], IR_REG, IR_REG+1));
+	LC2200->alu->func[bits(rom[state], ALUFN_0, ALUFN_1)] = true;
+	LC2200->reg->regno = ir_reg(LC2200->ir, bits(rom[state], IRREG_0, IRREG_1));
 
 	/* OPCODE DETERMINATION */
 	if (bitt(rom[state], S_O))
@@ -243,7 +243,7 @@ void setupcycle(LC2200_ LC2200) {
 		LC2200->clock = false;
 
 	if (debug) {
-		printf("bitsirreg:%lu\n", bits(rom[state], IR_REG, IR_REG+1));
+		printf("bitsirreg:%lu\n", bits(rom[state], IRREG_0, IRREG_1));
 		printf("nextopcode:%s\n", opcode);
 		printf("zval:%d\n", bitt(rom[state+1], Z_VAL));
 		printf("next:%s\n", nstate);

@@ -84,10 +84,10 @@ void testSystem(LC2200_ LC2200) {
 	LC2200->mem->MEM[25]= stow("0111 0000 0000 0000 0000 0000 0000 0000"); //halt
  	LC2200->mem->MEM[50]= stow("0111 0000 0000 0000 0000 0000 0000 0000"); //emergency halt
 
- 	LC2200->safetydebug = true;
+// 	LC2200->safetydebug = true;
  	LC2200->statedebug = true;
- 	LC2200->microdebug = true;
-	start(LC2200, 'h');
+// 	LC2200->microdebug = true;
+//	start(LC2200, 'h');
 }
 
 

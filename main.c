@@ -3,12 +3,18 @@
  * Course Project LC2200
  */
 
-
+/* HEADERS */
 #include "LC2200.h"
 #include "asm.h"
 #include "gui.h"
+#include "test.h"
 
+/* The LC2200
+ * *****************************************************************************
+ * Static global reference for the computer itself.
+ */
 static LC2200_ LC2200;
+
 
 static void step() {
 	start(LC2200, 's');
@@ -41,7 +47,7 @@ void uploadASM(LC2200_ LC2200, char* input) { //only works with old vertion
 int main(int argc, char *argv[]) {
 	LC2200 = LC2200_ctor();
 
-//	testSystem(LC2200);
+	testSystem(LC2200);
 
 	Gui gui = gui_ctor();
 	gui_connect_pc(gui, &LC2200->pc->pc);
