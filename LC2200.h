@@ -3,9 +3,11 @@
  * Course Project LC2200
  */
 
+/* HEADER FILE DEFINITION */
 #ifndef LC_2200_H
 #define LC_2200_H
 
+/* HEADERS */
 #include "bit.h"
 #include "fsm.h"
 #include "pc.h"
@@ -14,20 +16,36 @@
 #include "mem.h"
 #include "ir.h"
 
-#define SAFETY_LIMIT 255
-#define USE_LESS 0
+/* MACROS */
+#define SAFETY_LIMIT 1000
+#define MEMORY_DISPLAY_DEBUG 25
+#define ROM_RESERVED_CALLEESAVE_DISPLAY_DEBUG false
 
+/* SIGNAL ENUM
+ * -----------------------------------------------------------------------------
+ * Used in the three macro-stage cycle to emulate drive, load, and write.
+ */
 typedef enum {
 	Dr, Ld, Wr
-} signal;
+} signalx;
 
+/* COMPONENT ENUM
+ * -----------------------------------------------------------------------------
+ * The current component that the control unit is sending signals to.
+ */
 typedef enum {
 	_pc, _aluA, _aluB, _reg, _mem, _ir
-} component;
+} componentx;
 
+/* littlecomputer (LC2200) struct
+ * -----------------------------------------------------------------------------
+ * The setup of the LC2200, including all of the components and several bit
+ * switches for operations and debugging.
+ */
 typedef struct {
-	bit debug;
-	bit safety;
+	bit safetydebug;
+	bit statedebug;
+	bit microdebug;
 	bit clock;
 	bit z;
 	word cycle;
@@ -37,36 +55,20 @@ typedef struct {
 	reg_ reg;
 	mem_ mem;
 	ir_ ir;
-
 } littlecomputer2200;
 
+/* POINTER */
 typedef littlecomputer2200 *LC2200_;
 
+/* CONSTRUCTOR/DESTRUCTOR */
 LC2200_ LC2200_ctor();
 void LC2200_kill(LC2200_);
 
+/* METHODS */
 void start(LC2200_, char);
 void setupcycle(LC2200_);
 void microstate(LC2200_);
+void calleesave(LC2200_);
 void debug(LC2200_);
 
 #endif
-
-//typedef union {
-//	finitestatemachine ;
-//	systembus;
-//	programcounter;
-//	arithmeticlogicunit;
-//	registerfile;
-//	randomaccessmemory;
-//	instructionregister;
-//} component;
-//
-//
-//typedef enum {
-//
-//} type;
-//typedef struct {
-//	type type;
-//	component component;
-//} component;
