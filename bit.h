@@ -32,8 +32,6 @@
  * 32-bit long	word		uint32_t		4 byte values for registers, memory
  * signed long	aluw		int32_t			special signed 4 byte word for alu
  * 32-bit long	bus			word			connecting the system dialogues
- *
- * Note
  */
 
 /* DOESN'T DISPLAY WARNINGS THAT ARE DUE TO UINT_32 WORD CAST */
@@ -45,7 +43,7 @@ typedef uint32_t word;	//four bytes, system basis
 typedef int32_t aluw;	//special signed word for the alu
 
 /* *****************************************************************************
- * EXTERN DECLARATION OF BUS
+ * systembus (bus) i.e., EXTERN DECLARATION OF BUS
  * *****************************************************************************
  * The bus acts as the system bus in the LC2200 (see LC2200 for control usage).
  * The bus can be read from and written to by all components, and is used in
