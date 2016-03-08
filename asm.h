@@ -4,7 +4,7 @@
 #include "bit.h"
 #define OPCODE_LEN 4
 
-extern const char *REG_NAMES[];
+//extern const char *REG_NAMES[];
 
 void initializeInst(char *); 
 void argumentHelper(char *, char *); 

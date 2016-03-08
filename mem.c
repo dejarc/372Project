@@ -32,7 +32,6 @@ mem_ mem_ctor() {
 	mem->MAR = 0;
 	for(address = 0; address < MAX_MEM; address++)
 		mem->MEM[address] = 0; //initialize to 0
-
 	return mem;
 }
 

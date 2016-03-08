@@ -25,10 +25,8 @@ typedef _Bool bit;		//boolean signal/switch/bit
 typedef uint32_t word;	//four bytes, system basis
 typedef int32_t aluw;	//special signed word for the alu
 
-/* EXTERN DECLARATION OF BUS
- * -----------------------------------------------------------------------------
- * The bus acts as the system bus in the LC2200. See LC2200 for more info.
- */
+/* EXTERN DECLARATION OF BUS */
+// The bus acts as the system bus in the LC2200. See LC2200 for more info.
 extern word bus;
 
 /* BIT, WORD, STRING, and SPECIAL CONVERSION METHODS */

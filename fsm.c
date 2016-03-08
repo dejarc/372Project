@@ -39,7 +39,6 @@ fsm_ fsm_ctor() {
 	int romaddress;
 	finitestatemachine *fsm = malloc(sizeof(finitestatemachine));
 	fsm->state = 0; //ifetch1
-
 				   /* MICROSTATE BIT DETAIL
 				    *
 				    *			 MICROSTATE ROM LAYOUT
@@ -150,12 +149,9 @@ fsm_ fsm_ctor() {
 				/*jalr1  stow("0110 0 10000 10000 000000 01 000 01 1010"),//27*/
 				/*jalr2  stow("0110 0 10001 00100 100000 00 000 00 0000"),//28*/
 	};
-
 	for(romaddress = 0; romaddress < ROM_SIZE; romaddress++)
 		fsm->ROM[romaddress] = states[romaddress];
-
 	return fsm;
-
 }
 
 /* KILL

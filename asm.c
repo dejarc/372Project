@@ -4,16 +4,12 @@
  */
 
 #include "asm.h"
+#include "reg.h"
 #include <string.h>
 
 #define IMM_VAL 20
 #define MAX_ROWS 5
 #define HEX_CONST 16
-
-const char *REG_NAMES[] = {"$zero", "$at", "$v0", "$a0", 
-                           "$a1", "$a2", "$t0", "$t1", 
-                           "$t2", "$s0", "$s1", "$s2",
-                           "$k0", "$sp", "$fp", "$ra"};
 
 static int arg_num;
 static int br_offset;

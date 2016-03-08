@@ -14,6 +14,9 @@
 #define REG_LOG 4	//number of functions
 #define REG_NUM 16	//number of registers
 
+/* EXTERNAL DECLARATION OF REGISTER NAMES */
+extern const char *REG_NAMES[];
+
 /* registerfile (reg) struct
  * -----------------------------------------------------------------------------
  * Contains the drive and write bits as well as a register for holding the
