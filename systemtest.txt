@@ -5,40 +5,6 @@
 ;   //  8	   9	  10	 11	12	   13	  14	 15
 ;   //	$t2	   $s0    $s1	 $s2	$k0	   $sp	  $fp	 $ra
 ;	false,     false, false, false, true,  	   false, false, false,
-beq	$a2, $a0, 11
-addi	$a2 $a0 -4;
-addi	$s1,$a0, 4
-add $zero,$zero $a2
-	add $fp, $a0 $a2;;;;;;;;;
- nand	$v0, $a0 $a2
-addi $a1 $zero 2
-lw $t0 $a1, 4
-sw $s1 $a0 5
-addi $a1 $a1 1
-lw $v0 $a1 0
-jalr $a0, $ra
-halt;
-halt
-sw $t0, $a0 1
-halt
-beq $zero $zero 3
-halt
-halt;;;;;;
-					halt		;
-halt;
-halt
-halt
-halt
-halt
-halt
-halt
-halt
-halt
-halt
-.END
-
-
-
 .ORIG 0
 BEQ	$a2, $a0, 11
 ADDI	$a2 $a0 -4;
