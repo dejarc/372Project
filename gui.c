@@ -6,6 +6,7 @@
 #include <gtk/gtk.h>
 #include <stdlib.h>
 #include <stdio.h>
+
 #include "gui.h"
 #include "bit.h"
 
@@ -27,8 +28,8 @@ struct PRIVATE_GUI {
                     GtkWidget *menu_execute;
                         GtkWidget *menu_item_execute_run;
                         GtkWidget *menu_item_execute_step;
-                GtkWidget *menu_item_help;
             GtkWidget *box_horizontal;
+                GtkWidget *button_go_to_line;
                 GtkWidget *label_pc;
                 GtkWidget *tree_view_pc;
                     GtkListStore *list_store_pc;
@@ -195,6 +196,36 @@ static void callback_tree_view_edit(
     redraw(gui);
 }
 
+/* an instance of (*GCallback)
+ */
+static void callback_go_to_line(GtkWidget *widget, Gui gui) {
+    GtkTreeIter iter;
+    gtk_tree_model_get_iter_first(GTK_TREE_MODEL(gui->list_store_pc), &iter);
+    word *pc;
+    gtk_tree_model_get(GTK_TREE_MODEL(gui->list_store_pc), &iter, 0, &pc, -1);
+    GtkWidget *dialog, *spin_button, *content_area;
+    spin_button = gtk_spin_button_new_with_range(0, (word) -1, 1);
+    gtk_spin_button_set_value(GTK_SPIN_BUTTON(spin_button), (double) (int) *pc);
+    dialog = gtk_dialog_new_with_buttons(
+            "Go-to line...", GTK_WINDOW(gui->window), GTK_DIALOG_MODAL, 
+            "OK", GTK_RESPONSE_ACCEPT,
+            "Cancel", GTK_RESPONSE_CANCEL, NULL);
+    gtk_window_set_has_resize_grip(GTK_WINDOW(dialog), FALSE);
+    content_area = gtk_dialog_get_content_area(GTK_DIALOG (dialog));
+    gtk_container_add(GTK_CONTAINER(content_area), spin_button);
+    gtk_widget_show_all(dialog);
+    gint response = gtk_dialog_run(GTK_DIALOG(dialog));
+    if (response == GTK_RESPONSE_ACCEPT) {
+        word line = gtk_spin_button_get_value(GTK_SPIN_BUTTON(spin_button));
+        GtkTreePath *path_memory;
+        gtk_tree_model_iter_nth_child(GTK_TREE_MODEL(gui->list_store_memory), &iter, NULL, line);
+        path_memory = gtk_tree_model_get_path(GTK_TREE_MODEL(gui->list_store_memory), &iter);
+        gtk_tree_view_set_cursor(GTK_TREE_VIEW(gui->tree_view_memory), path_memory, NULL, FALSE);
+    }
+    gtk_widget_destroy(dialog);
+    redraw(gui);
+}
+
 static void connect_signals(Gui gui) {
     g_signal_connect(G_OBJECT(gui->window),                 "delete_event", 
                      G_CALLBACK(gtk_main_quit),             NULL);
@@ -212,6 +243,8 @@ static void connect_signals(Gui gui) {
                      G_CALLBACK(callback_tree_view_edit),   gui);
     g_signal_connect(G_OBJECT(gui->tree_view_pc),           "row-activated",
                      G_CALLBACK(callback_tree_view_edit),   gui);
+    g_signal_connect(G_OBJECT(gui->button_go_to_line),      "clicked",
+                     G_CALLBACK(callback_go_to_line),       gui);
 }
 
 static void set_up_layout(Gui gui) {
@@ -232,6 +265,7 @@ static void set_up_layout(Gui gui) {
 
     gtk_box_pack_end(GTK_BOX(gui->box_horizontal), gui->tree_view_pc, FALSE, FALSE, 0);
     gtk_box_pack_end(GTK_BOX(gui->box_horizontal), gui->label_pc, FALSE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(gui->box_horizontal), gui->button_go_to_line, FALSE, TRUE, 0);
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(gui->menu_item_file), gui->menu_file);
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(gui->menu_item_execute), gui->menu_execute);
     gtk_menu_shell_append(GTK_MENU_SHELL(gui->menu_file), gui->menu_item_file_open);
@@ -240,7 +274,6 @@ static void set_up_layout(Gui gui) {
     gtk_menu_shell_append(GTK_MENU_SHELL(gui->menu_execute), gui->menu_item_execute_step);
     gtk_container_add(GTK_CONTAINER(gui->menu_bar), gui->menu_item_file);
     gtk_container_add(GTK_CONTAINER(gui->menu_bar), gui->menu_item_execute);
-    gtk_container_add(GTK_CONTAINER(gui->menu_bar), gui->menu_item_help);
     gtk_container_add(GTK_CONTAINER(gui->scrolled_window_memory), gui->tree_view_memory);
     gtk_container_add(GTK_CONTAINER(gui->scrolled_window_registers), gui->tree_view_registers);
     gtk_box_pack_start(GTK_BOX(gui->box_vertical), gui->menu_bar, FALSE, TRUE, 0);
@@ -258,7 +291,9 @@ Gui gui_ctor() {
     gui->run       = &dummy_func;
     gui->open_file = &dummy_func;
     gui->step      = &dummy_func;
+    gui->asm_print = &dummy_func;
     
+    gui->button_go_to_line          = gtk_button_new_with_label("Go-to line...");
     gui->window                     = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gui->list_store_pc              = gtk_list_store_new(1, G_TYPE_POINTER);
     gui->tree_view_pc               = gtk_tree_view_new_with_model(GTK_TREE_MODEL(gui->list_store_pc));
@@ -271,7 +306,6 @@ Gui gui_ctor() {
     gui->menu_item_execute_run      = gtk_menu_item_new_with_label("Run");
     gui->menu_item_execute_step     = gtk_menu_item_new_with_label("Step");
     gui->menu_item_file             = gtk_menu_item_new_with_label("File");
-    gui->menu_item_help             = gtk_menu_item_new_with_label("Help");
     gui->menu_item_execute          = gtk_menu_item_new_with_label("Execute");
     gui->list_store_memory          = gtk_list_store_new(2, G_TYPE_POINTER, G_TYPE_STRING);
     gui->list_store_registers       = gtk_list_store_new(3, G_TYPE_POINTER, G_TYPE_STRING, G_TYPE_UINT);
