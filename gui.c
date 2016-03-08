@@ -24,11 +24,10 @@ struct PRIVATE_GUI {
                     GtkWidget *menu_file;
                         GtkWidget *menu_item_file_open;
                         GtkWidget *menu_item_file_exit;
-                GtkWidget *menu_item_execute;
-                    GtkWidget *menu_execute;
-                        GtkWidget *menu_item_execute_run;
-                        GtkWidget *menu_item_execute_step;
             GtkWidget *box_horizontal;
+                GtkWidget *button_run;
+                GtkWidget *button_step;
+                //GtkWidget *button_step_branch;
                 GtkWidget *button_go_to_line;
                 GtkWidget *label_pc;
                 GtkWidget *tree_view_pc;
@@ -231,9 +230,9 @@ static void connect_signals(Gui gui) {
                      G_CALLBACK(gtk_main_quit),             NULL);
     g_signal_connect(G_OBJECT(gui->menu_item_file_exit),    "activate",
                      G_CALLBACK(gtk_main_quit),             NULL);
-    g_signal_connect(G_OBJECT(gui->menu_item_execute_run),  "activate",
+    g_signal_connect(G_OBJECT(gui->button_run),             "clicked",
                      G_CALLBACK(callback_run),              gui);
-    g_signal_connect(G_OBJECT(gui->menu_item_execute_step), "activate",
+    g_signal_connect(G_OBJECT(gui->button_step),            "clicked",
                      G_CALLBACK(callback_step),             gui);
     g_signal_connect(G_OBJECT(gui->menu_item_file_open),    "activate",
                      G_CALLBACK(callback_open_file),        gui);
@@ -265,15 +264,13 @@ static void set_up_layout(Gui gui) {
 
     gtk_box_pack_end(GTK_BOX(gui->box_horizontal), gui->tree_view_pc, FALSE, FALSE, 0);
     gtk_box_pack_end(GTK_BOX(gui->box_horizontal), gui->label_pc, FALSE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(gui->box_horizontal), gui->button_run, FALSE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(gui->box_horizontal), gui->button_step, FALSE, TRUE, 0);
     gtk_box_pack_start(GTK_BOX(gui->box_horizontal), gui->button_go_to_line, FALSE, TRUE, 0);
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(gui->menu_item_file), gui->menu_file);
-    gtk_menu_item_set_submenu(GTK_MENU_ITEM(gui->menu_item_execute), gui->menu_execute);
     gtk_menu_shell_append(GTK_MENU_SHELL(gui->menu_file), gui->menu_item_file_open);
     gtk_menu_shell_append(GTK_MENU_SHELL(gui->menu_file), gui->menu_item_file_exit);
-    gtk_menu_shell_append(GTK_MENU_SHELL(gui->menu_execute), gui->menu_item_execute_run);
-    gtk_menu_shell_append(GTK_MENU_SHELL(gui->menu_execute), gui->menu_item_execute_step);
     gtk_container_add(GTK_CONTAINER(gui->menu_bar), gui->menu_item_file);
-    gtk_container_add(GTK_CONTAINER(gui->menu_bar), gui->menu_item_execute);
     gtk_container_add(GTK_CONTAINER(gui->scrolled_window_memory), gui->tree_view_memory);
     gtk_container_add(GTK_CONTAINER(gui->scrolled_window_registers), gui->tree_view_registers);
     gtk_box_pack_start(GTK_BOX(gui->box_vertical), gui->menu_bar, FALSE, TRUE, 0);
@@ -300,13 +297,11 @@ Gui gui_ctor() {
     gui->label_pc                   = gtk_label_new("PC: ");
     gui->menu_bar                   = gtk_menu_bar_new();
     gui->menu_file                  = gtk_menu_new();
-    gui->menu_execute               = gtk_menu_new();
     gui->menu_item_file_open        = gtk_menu_item_new_with_label("Open");
     gui->menu_item_file_exit        = gtk_menu_item_new_with_label("Exit");
-    gui->menu_item_execute_run      = gtk_menu_item_new_with_label("Run");
-    gui->menu_item_execute_step     = gtk_menu_item_new_with_label("Step");
+    gui->button_run                 = gtk_button_new_with_label("Run");
+    gui->button_step                = gtk_button_new_with_label("Step");
     gui->menu_item_file             = gtk_menu_item_new_with_label("File");
-    gui->menu_item_execute          = gtk_menu_item_new_with_label("Execute");
     gui->list_store_memory          = gtk_list_store_new(2, G_TYPE_POINTER, G_TYPE_STRING);
     gui->list_store_registers       = gtk_list_store_new(3, G_TYPE_POINTER, G_TYPE_STRING, G_TYPE_UINT);
     gui->box_vertical               = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
