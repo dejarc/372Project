@@ -19,7 +19,7 @@ static int num_branches;
 static int max_branches;
 static int comment_line;
 static int num_rows;
-
+static int origin;
 void instructionHelper(char *input, char *line) {
     int opcode = 0;
     int index;
@@ -136,6 +136,7 @@ char **getAllInstructions(FILE *fp) {
     int max_rows = MAX_ROWS;
     max_branches = MAX_ROWS;
     num_branches = 0;
+    origin = 0;
     bin_array = malloc(MAX_ROWS * sizeof(WORD_LEN) * sizeof(char *)); 
     line_numbers = malloc(MAX_ROWS * sizeof(WORD_LEN) * sizeof(char *));   
     br_labels = malloc(MAX_ROWS * sizeof(char *)); 
@@ -259,6 +260,8 @@ char *getInstruction(char *line, char **line_numbers, char **br_labels, int *br_
         int label_dest = label_val & (token_ctr > 1);//assumption that, if a label is found and it does not exist in the first slot, it specifies a destination 
         if(!arg_num && (int)strtol(tokenPtr, NULL, 10)) {
             line_num = hexConvert((int)strtol(tokenPtr, NULL, 10));  
+            if(num_rows == 0)
+                origin = line_num; 
             if (branch_found == true && first_scan) {//a line number shows up after a label. in this case the result is branch forward operation
                 br_lines[branch_index] = line_num - (br_lines[branch_index]);//line number shows up after a label, store the difference
             } else if(num_branches > 0 && br_lines[num_branches - 1] == 0 && first_scan) {// branch value not set, set value here
@@ -279,7 +282,7 @@ char *getInstruction(char *line, char **line_numbers, char **br_labels, int *br_
             } 
         }
         if(token_ctr >= 1 && line_num == 0 && !first_scan && !line_set) {
-            int temp_num = num_rows;
+            int temp_num = num_rows + origin;
             initializeInst(temp_line, WORD_LEN);
             for(index = 0; index < WORD_LEN; index++) {
                 if(1 & (temp_num >> index)) {
