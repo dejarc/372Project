@@ -15,23 +15,55 @@
  */
 static LC2200_ LC2200;
 
-
+/* STEP
+ * -----------------------------------------------------------------------------
+ * Runs one instruction.
+ */
 static void step() {
 	start(LC2200, 's');
 }
 
+/* RUN
+ * -----------------------------------------------------------------------------
+ * Runs until halt.
+ */
 static void run() {
 	start(LC2200, 'h');
 	//
 }
 
+/* JUMP OR BEQ
+ * -----------------------------------------------------------------------------
+ * Runs until a jump or beq is reached.
+ */
+static void jumporbeq() {
+	start(LC2200, 'j');
+}
+
+/* BREAKPOINT
+ * -----------------------------------------------------------------------------
+ * Runs until predefined breakpoint.
+ */
+static void breakpoint(word breakpoint) {
+	LC2200->cycle = breakpoint;
+	start(LC2200, 'b');
+}
+
+/* OPEN FILE
+ * -----------------------------------------------------------------------------
+ * Opens the file.
+ */
 static void open_file(FILE *file) {
 	printf("%d", fgetc(file));
     //
     //
 }
 
-void uploadASM(LC2200_ LC2200, char* input) { //only works with old vertion
+/* UPLOAD ASM
+ * -----------------------------------------------------------------------------
+ * Takes a file and converts it to binary, then uploads that into machine memory.
+ */
+static void uploadASM(LC2200_ LC2200, char* input) { //only works with old vertion
 	FILE *input_file;
     char **binary;
     int rows = 0;
@@ -44,6 +76,12 @@ void uploadASM(LC2200_ LC2200, char* input) { //only works with old vertion
     fclose(input_file);
 }
 
+/* *****************************************************************************
+ * main
+ * *****************************************************************************
+ * Creates the LC2200, sets up the GUI and connects functions to it, and then
+ * launches the GUI connected to the ASM and LC2200.
+ */
 int main(int argc, char *argv[]) {
 	LC2200 = LC2200_ctor();
 
