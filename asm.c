@@ -146,6 +146,11 @@ char **getAllInstructions(FILE *fp) {
     strcpy(line, "");
     first_scan = true;
     while (fgets(line, sizeof(line), fp)) {//used to scan for beq instructions    
+        for(index = 0; index < strlen(line); index++) {
+            if(line[index] < 0 || line[index] > 255) {
+                line[index] = ' ';
+            }
+        }
         if(line[0] != '\n' && line[0] != ';') { 
             if(num_rows - 1 == max_rows) {
                 max_rows *= 2;
@@ -156,8 +161,7 @@ char **getAllInstructions(FILE *fp) {
             if(strcmp(bin_array[num_rows], "END") == 0) {
                 break;
             }
-            if(strcmp(bin_array[num_rows],"COMMENT") != 0)
-                num_rows++; 
+            num_rows++;
         }
     }
     num_rows = 0;
@@ -169,6 +173,8 @@ char **getAllInstructions(FILE *fp) {
                 line[index] = ' ';
             }
         }
+        //printf("\nthe new value of the line is %s", line);         
+        
         if(line[0] != '\n' && line[0] != ';') {
             bin_array[num_rows] = getInstruction(line, line_numbers, br_labels, br_lines);
             strcpy(temp_word, bin_array[num_rows]);
@@ -241,11 +247,10 @@ char *getInstruction(char *line, char **line_numbers, char **br_labels, int *br_
     comment_line = false;
     while(tokenPtr != NULL) {
         token_ctr++;
-        if(!branch_found && !first_scan) {
+        if(!branch_found) {
             branch_index = 0;//this is resetting the branch value at the wrong time
             while (branch_index < num_branches) {
                 if(strcmp(br_labels[branch_index], tokenPtr) == 0) {
-                    printf("\nbranch found with labels %s and token %s on line number %d", br_labels[branch_index], tokenPtr, line_num);
                     branch_found = true;
                     break; 
                 }
@@ -300,7 +305,6 @@ char *getInstruction(char *line, char **line_numbers, char **br_labels, int *br_
             strcpy(line_numbers[num_rows], temp_line);
         }
         if(branch_found && first_scan && label_val) {//this is to solve the instance of a label showing up after a line number, in a previously stored branch
-            printf("\nthe branch value is %s", tokenPtr); 
             br_lines[branch_index] -= line_num;
         } 
         if(label_val && first_scan && !branch_found) {//a label and a new branch, store value
@@ -316,7 +320,7 @@ char *getInstruction(char *line, char **line_numbers, char **br_labels, int *br_
                br_lines[num_branches] = line_num + 1;//if label at end of line, initialize value 
             }
             num_branches++;
-        } else if(label_val && !first_scan && branch_found) {//use precompted values on second go 
+        } else if(label_origin && !first_scan && branch_found) {//use precompted values on second go 
             int index;
             //printf("\nbranch encountered with the label %s and line number %d", br_labels[num_branches - 1], br_lines[branch_index]);  
             for(index = 0; index < IMM_VAL; index++) {
@@ -328,8 +332,6 @@ char *getInstruction(char *line, char **line_numbers, char **br_labels, int *br_
         //printf("\nthe token is %s", tokenPtr);
         parseInput(tokenPtr, new_line);
         if((tokenPtr[strlen(tokenPtr) - 1] == ';' || tokenPtr[0] == ';') && !first_scan) {
-            if(token_ctr == 1)
-                return "COMMENT";
             return new_line;
         }
         tokenPtr = strtok(NULL, " ,:()\n");
