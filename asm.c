@@ -4,9 +4,6 @@
  */
 
 #include "asm.h"
-#include "reg.h"
-#include <string.h>
-
 #define IMM_VAL 20
 #define MAX_ROWS 5
 #define HEX_CONST 16
@@ -87,6 +84,7 @@ void argumentHelper(char *input, char* line) {
     }     
 }
 void parseInput(char *input, char *line) {
+    //printf("\nthe value of the input is %s", input);
     int index;
     int start_bit;
     char temp[strlen(input) + 1];   
@@ -108,14 +106,17 @@ void parseInput(char *input, char *line) {
             arg_num++;
             argumentHelper(temp, line);
         }
-    } else if(arg_num > 0 || hex_input) {
-        if(hex_input) {
-            imm = hexConvert(imm);
+    } else { 
+    
+        if(arg_num > 0 || hex_input) {
+            if(hex_input) {
+                imm = hexConvert(imm);
+            }
+            for(index = 0; index < IMM_VAL; index++) {
+                if(1 & (imm >> index))
+                    line[index] = '1';
+            }   
         }
-        for(index = 0; index < IMM_VAL; index++) {
-            if(1 & (imm >> index))
-                line[index] = '1';
-        }   
     }
 }
 void initializeInst(char *line, int range) {
@@ -134,55 +135,60 @@ char **getAllInstructions(FILE *fp) {
     num_rows = 0;
     char *temp_word = malloc(WORD_LEN);
     int max_rows = MAX_ROWS;
+    origin = 0;
     max_branches = MAX_ROWS;
     num_branches = 0;
-    origin = 0;
     bin_array = malloc(MAX_ROWS * sizeof(WORD_LEN) * sizeof(char *)); 
     line_numbers = malloc(MAX_ROWS * sizeof(WORD_LEN) * sizeof(char *));   
     br_labels = malloc(MAX_ROWS * sizeof(char *)); 
     br_lines = malloc(MAX_ROWS * sizeof(int));
     char line[256];
+    strcpy(line, "");
     first_scan = true;
     while (fgets(line, sizeof(line), fp)) {//used to scan for beq instructions    
-        if(num_rows - 1 == max_rows) {
-            max_rows *= 2;
-            bin_array = (char **)realloc(bin_array, sizeof(char *) * max_rows * sizeof(WORD_LEN));
-            line_numbers = (char **)realloc(line_numbers, sizeof(char *) * max_rows * sizeof(WORD_LEN));
+        if(line[0] != '\n' && line[0] != ';') { 
+            if(num_rows - 1 == max_rows) {
+                max_rows *= 2;
+                bin_array = (char **)realloc(bin_array, sizeof(char *) * max_rows * sizeof(WORD_LEN));
+                line_numbers = (char **)realloc(line_numbers, sizeof(char *) * max_rows * sizeof(WORD_LEN));
+            }
+            bin_array[num_rows] = getInstruction(line, line_numbers, br_labels, br_lines); 
+            if(strcmp(bin_array[num_rows], "END") == 0) {
+                break;
+            }
+            if(strcmp(bin_array[num_rows],"COMMENT") != 0)
+                num_rows++; 
         }
-        bin_array[num_rows] = getInstruction(line, line_numbers, br_labels, br_lines); 
-        num_rows++; 
     }
     num_rows = 0;
     fseek(fp, 0, SEEK_SET); 
     first_scan = false;
     while (fgets(line, sizeof(line), fp)) {    
-        bin_array[num_rows] = getInstruction(line, line_numbers, br_labels, br_lines);
-        strcpy(temp_word, bin_array[num_rows]);
-        if(strcmp(bin_array[num_rows],"COMMENT") != 0) {
-            if(strcmp(bin_array[num_rows], "END") == 0) {
-                char * temp = bin_array[num_rows];
-                bin_array[num_rows] = NULL;
-                free(temp);
-                break;
+        for(index = 0; index < strlen(line); index++) {
+            if(line[index] < 0 || line[index] > 255) {
+                line[index] = ' ';
             }
-            for(index = 0; index < WORD_LEN; index++) {
-                bin_array[num_rows][index] = temp_word[(WORD_LEN - 1) - index];
-            }
-            strcpy(temp_word, line_numbers[num_rows]);
-            for(index = 0; index < WORD_LEN; index++) {
-                line_numbers[num_rows][index] = temp_word[(WORD_LEN - 1) - index];
-            }
-            //printf("\nvalue of line numbers %s", line_numbers[num_rows]);
-            //printf("\nvalue of bin    array %s", bin_array[num_rows]);
-            //initializeInst(everything[num_rows], WORD_LEN * 2);
-            /*for(index = 0; index < WORD_LEN; index++) {
-                everything[num_rows][index] = line_numbers[num_rows][index];
-            }
-            for(index = WORD_LEN; index < WORD_LEN * 2; index++) {
-                everything[num_rows][index] = bin_array[num_rows][index - WORD_LEN];
-            }*/
-            num_rows++;
-        } 
+        }
+        if(line[0] != '\n' && line[0] != ';') {
+            bin_array[num_rows] = getInstruction(line, line_numbers, br_labels, br_lines);
+            strcpy(temp_word, bin_array[num_rows]);
+            if(strcmp(bin_array[num_rows],"COMMENT") != 0) {
+                if(strcmp(bin_array[num_rows], "END") == 0) {
+                    char * temp = bin_array[num_rows];
+                    bin_array[num_rows] = NULL;
+                    free(temp);
+                    break;
+                }
+                for(index = 0; index < WORD_LEN; index++) {
+                    bin_array[num_rows][index] = temp_word[(WORD_LEN - 1) - index];
+                }
+                strcpy(temp_word, line_numbers[num_rows]);
+                for(index = 0; index < WORD_LEN; index++) {
+                    line_numbers[num_rows][index] = temp_word[(WORD_LEN - 1) - index];
+                }
+                num_rows++;
+            } 
+        }
     }
     int column;
     char **everything = malloc(sizeof(char *) * WORD_LEN * 2 * num_rows);
@@ -219,7 +225,7 @@ int hexConvert(int num) {
     return converted_num;
 }
 char *getInstruction(char *line, char **line_numbers, char **br_labels, int *br_lines) {
-    char *tokenPtr = strtok(line, " ,:()\t\n");
+    char *tokenPtr = strtok(line, " ,:()\n");
     char temp_line[32]; 
     arg_num = 0;
     hex_input = false;
@@ -234,18 +240,14 @@ char *getInstruction(char *line, char **line_numbers, char **br_labels, int *br_
     int line_set = false;
     comment_line = false;
     while(tokenPtr != NULL) {
-        //printf("\nthe token is %s", tokenPtr);
-        /*if(tokenPtr[strlen(tokenPtr) - 1] == ';' || tokenPtr[0] == ';') {
-            //printf("\nthe token is %s", tokenPtr);
-            return new_line;
-        }*/
         token_ctr++;
-        if(!branch_found) {
+        if(!branch_found && !first_scan) {
             branch_index = 0;//this is resetting the branch value at the wrong time
             while (branch_index < num_branches) {
                 if(strcmp(br_labels[branch_index], tokenPtr) == 0) {
+                    printf("\nbranch found with labels %s and token %s on line number %d", br_labels[branch_index], tokenPtr, line_num);
                     branch_found = true;
-                    break;
+                    break; 
                 }
                 branch_index++;
             }
@@ -257,11 +259,14 @@ char *getInstruction(char *line, char **line_numbers, char **br_labels, int *br_
         if(strcmp(tokenPtr,".ORIG" ) == 0 || strcmp(tokenPtr,"lw" ) == 0 || strcmp(tokenPtr,"sw" ) == 0) 
             hex_input = true;
         int label_val = (tokenPtr[0] < 91) & (tokenPtr[0] > 64);//used to identify a label, uppercase assumption
-        int label_dest = label_val & (token_ctr > 1);//assumption that, if a label is found and it does not exist in the first slot, it specifies a destination 
-        if(!arg_num && (int)strtol(tokenPtr, NULL, 10)) {
+        int label_origin = label_val & (token_ctr > 1);//assumption that, if a label is found and it does not exist in the first slot, it specifies a destination 
+        int label_dest = label_val & (token_ctr == 1);//assumption that, if a label is found and it does not exist in the first slot, it specifies a destination   
+        if(token_ctr <= 2 && (int)strtol(tokenPtr, NULL, 10)) {
             line_num = hexConvert((int)strtol(tokenPtr, NULL, 10));  
-            if(num_rows == 0)
-                origin = line_num; 
+            if(num_rows == 0) {
+                origin = line_num;
+                //printf("\norigin found %d with line number %d",origin, num_rows);
+            } 
             if (branch_found == true && first_scan) {//a line number shows up after a label. in this case the result is branch forward operation
                 br_lines[branch_index] = line_num - (br_lines[branch_index]);//line number shows up after a label, store the difference
             } else if(num_branches > 0 && br_lines[num_branches - 1] == 0 && first_scan) {// branch value not set, set value here
@@ -294,7 +299,8 @@ char *getInstruction(char *line, char **line_numbers, char **br_labels, int *br_
             line_numbers[num_rows] = malloc(sizeof(temp_line));
             strcpy(line_numbers[num_rows], temp_line);
         }
-        if(label_dest && branch_found && first_scan ) {//this is to solve the instance of a label showing up after a line number, in a previously stored branch
+        if(branch_found && first_scan && label_val) {//this is to solve the instance of a label showing up after a line number, in a previously stored branch
+            printf("\nthe branch value is %s", tokenPtr); 
             br_lines[branch_index] -= line_num;
         } 
         if(label_val && first_scan && !branch_found) {//a label and a new branch, store value
@@ -310,7 +316,7 @@ char *getInstruction(char *line, char **line_numbers, char **br_labels, int *br_
                br_lines[num_branches] = line_num + 1;//if label at end of line, initialize value 
             }
             num_branches++;
-        } else if(label_val && !first_scan && label_dest) {//use precompted values on second go 
+        } else if(label_val && !first_scan && branch_found) {//use precompted values on second go 
             int index;
             //printf("\nbranch encountered with the label %s and line number %d", br_labels[num_branches - 1], br_lines[branch_index]);  
             for(index = 0; index < IMM_VAL; index++) {
@@ -319,14 +325,14 @@ char *getInstruction(char *line, char **line_numbers, char **br_labels, int *br_
                 }
             }   
         } 
+        //printf("\nthe token is %s", tokenPtr);
         parseInput(tokenPtr, new_line);
         if((tokenPtr[strlen(tokenPtr) - 1] == ';' || tokenPtr[0] == ';') && !first_scan) {
-            if(token_ctr == 1) {
-                return "COMMENT"; 
-            }
+            if(token_ctr == 1)
+                return "COMMENT";
             return new_line;
         }
-        tokenPtr = strtok(NULL, " ,:()\t\n");
+        tokenPtr = strtok(NULL, " ,:()\n");
     }
     if(first_scan) {//initial scan, return empty string 
         free(new_line);
@@ -335,55 +341,26 @@ char *getInstruction(char *line, char **line_numbers, char **br_labels, int *br_
     }
     return new_line;
 }
-void asm_print(char buf[], word w) {
-    switch (bits(w, 0, 3)) {
-        case 0:
-            sprintf(buf, "add, ");
-            sprintf(buf + strlen(buf), "%s, ", REG_NAMES[bits(w, 4, 7)]);
-            sprintf(buf + strlen(buf), "%s, ", REG_NAMES[bits(w, 8, 11)]);
-            sprintf(buf + strlen(buf), "%s", REG_NAMES[bits(w, 28, 31)]);
-            break;
-        case 1:
-            sprintf(buf, "nand, ");
-            sprintf(buf + strlen(buf), "%s, ", REG_NAMES[bits(w, 4, 7)]);
-            sprintf(buf + strlen(buf), "%s, ", REG_NAMES[bits(w, 8, 11)]);
-            sprintf(buf + strlen(buf), "%s", REG_NAMES[bits(w, 28, 31)]);
-            break;
-        case 2:
-            sprintf(buf, "addi, ");
-            sprintf(buf + strlen(buf), "%s, ", REG_NAMES[bits(w, 4, 7)]);
-            sprintf(buf + strlen(buf), "%s, ", REG_NAMES[bits(w, 8, 11)]);
-            sprintf(buf + strlen(buf), "%d", ((signed int) w << 12) >> 12);
-            break;
-        case 3:
-            sprintf(buf, "lw, ");
-            sprintf(buf + strlen(buf), "%s, ", REG_NAMES[bits(w, 4, 7)]);
-            sprintf(buf + strlen(buf), "%s, ", REG_NAMES[bits(w, 8, 11)]);
-            sprintf(buf + strlen(buf), "%u", (w << 12) >> 12);
-            break;
-        case 4:
-            sprintf(buf, "sw, ");
-            sprintf(buf + strlen(buf), "%s, ", REG_NAMES[bits(w, 4, 7)]);
-            sprintf(buf + strlen(buf), "%s, ", REG_NAMES[bits(w, 8, 11)]);
-            sprintf(buf + strlen(buf), "%u", (w << 12) >> 12);
-            break;
-        case 5:
-            sprintf(buf, "beq, ");
-            sprintf(buf + strlen(buf), "%s, ", REG_NAMES[bits(w, 4, 7)]);
-            sprintf(buf + strlen(buf), "%s, ", REG_NAMES[bits(w, 8, 11)]);
-            sprintf(buf + strlen(buf), "x%X", (w << 12) >> 12);
-            break;
-        case 6:
-            sprintf(buf, "jalr, ");
-            sprintf(buf + strlen(buf), "%s, ", REG_NAMES[bits(w, 4, 7)]);
-            sprintf(buf + strlen(buf), "%s", REG_NAMES[bits(w, 8, 11)]);
-            break;
-        case 7:
-            sprintf(buf, "halt");
-            break;
-        default:
-            break;
-    } 
+ 
+int main(int argc, char **argv) {
+    FILE *input_file;
+    char **bin_array;
+    int num_rows = 0;
+    int max_rows = MAX_ROWS;
+    if (argc > 1) {
+        input_file = fopen(argv[1], "r");
+    } else {
+        input_file = fopen("test.txt", "r");
+        if(input_file == NULL)
+            printf("\ncannot open this file!" ); 
+    }
+    bin_array = getAllInstructions(input_file);
+    while(bin_array[num_rows] != NULL) {
+        printf("\nthe value of the %d row of the binary array is %s", num_rows, bin_array[num_rows]);
+        num_rows++;
+    }
+    return 0;
+}
 
 
 
