@@ -4,6 +4,9 @@
  */
 
 #include "asm.h"
+#include "reg.h"
+#include <string.h>
+
 #define IMM_VAL 20
 #define MAX_ROWS 5
 #define HEX_CONST 16
@@ -358,11 +361,56 @@ char *getInstruction(char *line, char **line_numbers, char **br_labels, int *br_
     return new_line;
 }
  
-void asm_print(char ch[], word wd) {
-
-
-
-}
+void asm_print(char buf[], word w) {
+     switch (bits(w, 0, 3)) {
+         case 0:
+             sprintf(buf, "add, ");
+             sprintf(buf + strlen(buf), "%s, ", REG_NAMES[bits(w, 4, 7)]);
+             sprintf(buf + strlen(buf), "%s, ", REG_NAMES[bits(w, 8, 11)]);
+             sprintf(buf + strlen(buf), "%s", REG_NAMES[bits(w, 28, 31)]);
+             break;
+         case 1:
+             sprintf(buf, "nand, ");
+             sprintf(buf + strlen(buf), "%s, ", REG_NAMES[bits(w, 4, 7)]);
+             sprintf(buf + strlen(buf), "%s, ", REG_NAMES[bits(w, 8, 11)]);
+             sprintf(buf + strlen(buf), "%s", REG_NAMES[bits(w, 28, 31)]);
+             break;
+         case 2:
+             sprintf(buf, "addi, ");
+             sprintf(buf + strlen(buf), "%s, ", REG_NAMES[bits(w, 4, 7)]);
+             sprintf(buf + strlen(buf), "%s, ", REG_NAMES[bits(w, 8, 11)]);
+             sprintf(buf + strlen(buf), "%d", ((signed int) w << 12) >> 12);
+             break;
+         case 3:
+             sprintf(buf, "lw, ");
+             sprintf(buf + strlen(buf), "%s, ", REG_NAMES[bits(w, 4, 7)]);
+             sprintf(buf + strlen(buf), "%s, ", REG_NAMES[bits(w, 8, 11)]);
+             sprintf(buf + strlen(buf), "%u", (w << 12) >> 12);
+             break;
+         case 4:
+             sprintf(buf, "sw, ");
+             sprintf(buf + strlen(buf), "%s, ", REG_NAMES[bits(w, 4, 7)]);
+             sprintf(buf + strlen(buf), "%s, ", REG_NAMES[bits(w, 8, 11)]);
+             sprintf(buf + strlen(buf), "%u", (w << 12) >> 12);
+             break;
+         case 5:
+             sprintf(buf, "beq, ");
+             sprintf(buf + strlen(buf), "%s, ", REG_NAMES[bits(w, 4, 7)]);
+             sprintf(buf + strlen(buf), "%s, ", REG_NAMES[bits(w, 8, 11)]);
+             sprintf(buf + strlen(buf), "x%X", (w << 12) >> 12);
+             break;
+         case 6:
+             sprintf(buf, "jalr, ");
+             sprintf(buf + strlen(buf), "%s, ", REG_NAMES[bits(w, 4, 7)]);
+             sprintf(buf + strlen(buf), "%s", REG_NAMES[bits(w, 8, 11)]);
+             break;
+         case 7:
+             sprintf(buf, "halt");
+             break;
+         default:
+             break;
+     } 
+ }
 
 
 
