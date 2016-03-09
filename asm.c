@@ -342,24 +342,10 @@ char *getInstruction(char *line, char **line_numbers, char **br_labels, int *br_
     return new_line;
 }
  
-int main(int argc, char **argv) {
-    FILE *input_file;
-    char **bin_array;
-    int num_rows = 0;
-    int max_rows = MAX_ROWS;
-    if (argc > 1) {
-        input_file = fopen(argv[1], "r");
-    } else {
-        input_file = fopen("test.txt", "r");
-        if(input_file == NULL)
-            printf("\ncannot open this file!" ); 
-    }
-    bin_array = getAllInstructions(input_file);
-    while(bin_array[num_rows] != NULL) {
-        printf("\nthe value of the %d row of the binary array is %s", num_rows, bin_array[num_rows]);
-        num_rows++;
-    }
-    return 0;
+void asm_print(char[], word) {
+    
+    
+    
 }
 
 
