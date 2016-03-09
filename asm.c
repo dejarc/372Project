@@ -126,12 +126,14 @@ void initializeInst(char *line, int range) {
     }
     line[index] = '\0';
 }
-char **getAllInstructions(FILE *fp) {
+char **getAllInstructions(FILE *fp, int *idx, int *clx) {
     char **bin_array;
     char **br_labels;
     char **line_numbers;
+    char **everything;
     int *br_lines;
     int index;
+    int column;
     num_rows = 0;
     char *temp_word = malloc(WORD_LEN);
     int max_rows = MAX_ROWS;
@@ -145,7 +147,9 @@ char **getAllInstructions(FILE *fp) {
     char line[256];
     strcpy(line, "");
     first_scan = true;
+//    printf("TEST!!");
     while (fgets(line, sizeof(line), fp)) {//used to scan for beq instructions    
+//    	printf("%s\n", line);
         for(index = 0; index < strlen(line); index++) {
             if(line[index] < 0 || line[index] > 255) {
                 line[index] = ' ';
@@ -164,6 +168,7 @@ char **getAllInstructions(FILE *fp) {
             num_rows++;
         }
     }
+
     num_rows = 0;
     fseek(fp, 0, SEEK_SET); 
     first_scan = false;
@@ -196,17 +201,21 @@ char **getAllInstructions(FILE *fp) {
             } 
         }
     }
-    int column;
-    char **everything = malloc(sizeof(char *) * WORD_LEN * 2 * num_rows);
+
+
+    everything = (char**)malloc(sizeof(char *) /* WORD_LEN * 2*/ * num_rows);
     for(index = 0; index < num_rows; index++) { 
-        everything[index] = malloc(WORD_LEN * 2);
+        everything[index] = (char*)malloc((WORD_LEN * 2 + 1) * sizeof(char));
+
         for(column = 0; column < WORD_LEN * 2; column++) {
+//            printf("%d %d\n", index, column);
             everything[index][column] = '0';
         }
-        everything[index][column] = '\0';
+        everything[index][column+1] = '\0';
     }
+
     index = 0;
-    while(bin_array[index] != NULL & line_numbers[index] != NULL) {
+    while(bin_array[index] != NULL && line_numbers[index] != NULL) {
         for(column = 0; column < WORD_LEN; column++) {
             everything[index][column] = '0';
             everything[index][column] = line_numbers[index][column];
@@ -216,10 +225,15 @@ char **getAllInstructions(FILE *fp) {
         }
         index++;
     }
+
+//    if (true) return bin_array;
+    *idx = index;
+    *clx = column;
     
     free(temp_word);
     return everything;
 }
+
 int hexConvert(int num) {
     int converted_num = 0;
     int hex_mult = 1;
@@ -344,10 +358,10 @@ char *getInstruction(char *line, char **line_numbers, char **br_labels, int *br_
     return new_line;
 }
  
-void asm_print(char[], word) {
-    
-    
-    
+void asm_print(char ch[], word wd) {
+
+
+
 }
 
 
