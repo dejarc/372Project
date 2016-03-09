@@ -65,10 +65,11 @@ LC2200_ LC2200_ctor();
 void LC2200_kill(LC2200_);
 
 /* METHODS */
-void start(LC2200_, char);
-void setupcycle(LC2200_);
-void microstate(LC2200_);
-void calleesave(LC2200_);
-void debug(LC2200_);
+void start(LC2200_, char);	//starts the system under certain conditions
+void setupcycle(LC2200_);	//cycle phase i
+void switchstate(LC2200_);	//cycle phase ii
+void microstate(LC2200_);	//cycle phase iii
+void calleesave(LC2200_);	//unimplemented
+void debug(LC2200_);		//for testing
 
 #endif

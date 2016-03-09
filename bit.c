@@ -70,7 +70,7 @@ word stow(char *bitSequence) {
 
 /* CONVERT WORD TO STRING
  * -----------------------------------------------------------------------------
- * Given a word, converts it into a binary string representation.
+ * Given a word, converts it into a binary string representation of 1s and 0s.
  */
 char *wtos(word bits) {
     char *temp_word = (char *)malloc(WORD_LEN+1);
