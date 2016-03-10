@@ -161,6 +161,7 @@ static void callback_open_file(GtkWidget *widget, Gui gui) {
     }
     gtk_widget_destroy(dialog);
     redraw(gui);
+    go_to_pc(gui);
 }
 
 /* an instance of (*GCallback)
