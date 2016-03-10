@@ -23,31 +23,86 @@ static int origin;
 void instructionHelper(char *input, char *line) {
     int opcode = 0;
     int index;
-    if(strcmp(input, "add") == 0) {
-        opcode = 0;   
-    } else if(strcmp(input, "nand") == 0) {
+    int idx;
+    word wd;
+    if (strstr(input, "sum") != NULL) return;
+    printf("---------%s\n", input);
+    if(strstr(input, "add") != NULL)
+        opcode = 0;
+    if(strstr(input, "nand") != NULL)
         opcode = 1;
-    } else if(strcmp(input, "addi") == 0) {
+    if(strstr(input, "addi") != NULL)
         opcode = 2;
-    } else if(strcmp(input, "sw") == 0) {
+    if(strstr(input, "sw") != NULL)
         opcode = 4;  
-    } else if(strcmp(input, "lw") == 0) {
+    if(strstr(input, "lw") != NULL)
         opcode = 3; 
-    } else if(strcmp(input, "beq") == 0) {
+    if(strstr(input, "beq") != NULL)
         opcode = 5;
-    } else if(strcmp(input, "j") == 0 || strcmp(input, "jalr") == 0) {
+    if(strstr(input, "jalr") != NULL)
         opcode = 6;
-    } else if(strcmp(input, "halt") == 0){
+    if(strstr(input, "halt") != NULL)
         opcode = 7;
-    } 
-    
-    for(index = WORD_LEN - OPCODE_LEN; index < WORD_LEN; index++) {
-        if(1 & (opcode >> (index - WORD_LEN + OPCODE_LEN))) { 
-            line[index] = '1';
-        } else {
-            line[index] = '0';
-        }
+
+    wd = opcode;
+
+    index = WORD_LEN - OPCODE_LEN + 3;
+
+
+        printf("------------%d\n", opcode);
+
+    if (opcode == 0) {
+        line[index] = '0';
+        line[index-1] = '0';
+        line[index-2] = '0';
+        line[index-3] = '0';
+    } else if (opcode == 1) {
+        line[index] = '0';
+        line[index-1] = '0';
+        line[index-2] = '0';
+        line[index-3] = '1';
+    } else if (opcode == 2) {
+        line[index] = '0';
+        line[index-1] = '0';
+        line[index-2] = '1';
+        line[index-3] = '0';
+    } else if (opcode == 3) {
+        line[index] = '0';
+        line[index-1] = '0';
+        line[index-2] = '1';
+        line[index-3] = '1';
+    } else if (opcode == 4) {
+        line[index] = '0';
+        line[index-1] = '1';
+        line[index-2] = '0';
+        line[index-3] = '0';
+    } else if (opcode == 5) {
+        line[index] = '0';
+        line[index-1] = '1';
+        line[index-2] = '0';
+        line[index-3] = '1';
+    } else if (opcode == 6) {
+        line[index] = '0';
+        line[index-1] = '1';
+        line[index-2] = '1';
+        line[index-3] = '0';
+    } else if (opcode == 7) {
+        line[index] = '0';
+        line[index-1] = '1';
+        line[index-2] = '1';
+        line[index-3] = '1';
     }
+
+//    printf("------------%d\n", wd);
+//    idx = 28;
+//    for(index = WORD_LEN - OPCODE_LEN; index < WORD_LEN; index++) {
+//        if( bitt(wd, idx)) {
+//            line[index] = '1';
+//        } else {
+//            line[index] = '0';
+//        }
+//        idx++;
+//    }
 }
 void argumentHelper(char *input, char* line) {
     char *ptr;
