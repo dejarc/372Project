@@ -91,13 +91,15 @@ void start(LC2200_ LC2200, char mode) {
 	bit haltonjump = false;
 	int tick = 0;
 
+	if (LC2200->pc->pc >= MAX_MEM - 1) return;
+
 	/* RUN UNTIL */
 	//halt
-	if (mode == 'h') LC2200->cycle = MAX_MEM;
+	if (mode == 'h') LC2200->cycle = MAX_MEM - 1;
 	//step (goes once)
 	else if (mode == 's') LC2200->cycle = LC2200->pc->pc + 1;
 	//jump or branch
-	else if (mode == 'j') haltonjump = true;
+	else if (mode == 'j') {haltonjump = true; LC2200->cycle = MAX_MEM - 1;}
 	//breakpoint (whatever the controller set it to, default 0)
 	else if (mode == 'b') tick = 0;
 	//wont' run

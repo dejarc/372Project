@@ -14,7 +14,8 @@
  */
 struct PRIVATE_GUI {
     void (*run)(void);
-    void (*step)(void);
+    void (*step_in)(void);
+    void (*step_out)(void);
     void (*open_file)(FILE *);
     void (*asm_print)(char[], word);
     GtkWidget *window;
@@ -26,8 +27,8 @@ struct PRIVATE_GUI {
                         GtkWidget *menu_item_file_exit;
             GtkWidget *box_horizontal;
                 GtkWidget *button_run;
-                GtkWidget *button_step;
-                //GtkWidget *button_step_branch;
+                GtkWidget *button_step_in;
+                GtkWidget *button_step_out;
                 GtkWidget *button_go_to_line;
                 GtkWidget *label_pc;
                 GtkWidget *tree_view_pc;
@@ -71,8 +72,14 @@ static void callback_run(GtkWidget *widget, Gui gui) {
 
 /* an instance of (*GCallback)
  */
-static void callback_step(GtkWidget *widget, Gui gui) {
-    gui->step();
+static void callback_step_in(GtkWidget *widget, Gui gui) {
+    gui->step_in();
+    go_to_pc(gui);
+    redraw(gui);
+}
+
+static void callback_step_out(GtkWidget *widget, Gui gui) {
+    gui->step_out();
     go_to_pc(gui);
     redraw(gui);
 }
@@ -233,8 +240,10 @@ static void connect_signals(Gui gui) {
                      G_CALLBACK(gtk_main_quit),             NULL);
     g_signal_connect(G_OBJECT(gui->button_run),             "clicked",
                      G_CALLBACK(callback_run),              gui);
-    g_signal_connect(G_OBJECT(gui->button_step),            "clicked",
-                     G_CALLBACK(callback_step),             gui);
+    g_signal_connect(G_OBJECT(gui->button_step_in),         "clicked",
+                     G_CALLBACK(callback_step_in),          gui);
+    g_signal_connect(G_OBJECT(gui->button_step_out),        "clicked",
+                     G_CALLBACK(callback_step_out),         gui);
     g_signal_connect(G_OBJECT(gui->menu_item_file_open),    "activate",
                      G_CALLBACK(callback_open_file),        gui);
     g_signal_connect(G_OBJECT(gui->tree_view_memory),       "row-activated",
@@ -266,7 +275,8 @@ static void set_up_layout(Gui gui) {
     gtk_box_pack_end(GTK_BOX(gui->box_horizontal), gui->tree_view_pc, FALSE, FALSE, 0);
     gtk_box_pack_end(GTK_BOX(gui->box_horizontal), gui->label_pc, FALSE, TRUE, 0);
     gtk_box_pack_start(GTK_BOX(gui->box_horizontal), gui->button_run, FALSE, TRUE, 0);
-    gtk_box_pack_start(GTK_BOX(gui->box_horizontal), gui->button_step, FALSE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(gui->box_horizontal), gui->button_step_in, FALSE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(gui->box_horizontal), gui->button_step_out, FALSE, TRUE, 0);
     gtk_box_pack_start(GTK_BOX(gui->box_horizontal), gui->button_go_to_line, FALSE, TRUE, 0);
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(gui->menu_item_file), gui->menu_file);
     gtk_menu_shell_append(GTK_MENU_SHELL(gui->menu_file), gui->menu_item_file_open);
@@ -279,6 +289,7 @@ static void set_up_layout(Gui gui) {
     gtk_box_pack_start(GTK_BOX(gui->box_vertical), gui->scrolled_window_registers, FALSE, TRUE, 0);
     gtk_box_pack_start(GTK_BOX(gui->box_vertical), gui->scrolled_window_memory, TRUE, TRUE, 0);
     gtk_container_add(GTK_CONTAINER(gui->window), gui->box_vertical);
+
     gtk_widget_show_all(gui->window);
 }
 
@@ -288,7 +299,8 @@ Gui gui_ctor() {
 
     gui->run       = &dummy_func;
     gui->open_file = &dummy_func;
-    gui->step      = &dummy_func;
+    gui->step_in   = &dummy_func;
+    gui->step_out  = &dummy_func;
     gui->asm_print = &dummy_func;
     
     gui->button_go_to_line          = gtk_button_new_with_label("Go-to line...");
@@ -301,7 +313,8 @@ Gui gui_ctor() {
     gui->menu_item_file_open        = gtk_menu_item_new_with_label("Open");
     gui->menu_item_file_exit        = gtk_menu_item_new_with_label("Exit");
     gui->button_run                 = gtk_button_new_with_label("Run");
-    gui->button_step                = gtk_button_new_with_label("Step");
+    gui->button_step_in             = gtk_button_new_with_label("Step in");
+    gui->button_step_out            = gtk_button_new_with_label("Step out");
     gui->menu_item_file             = gtk_menu_item_new_with_label("File");
     gui->list_store_memory          = gtk_list_store_new(2, G_TYPE_POINTER, G_TYPE_STRING);
     gui->list_store_registers       = gtk_list_store_new(3, G_TYPE_POINTER, G_TYPE_STRING, G_TYPE_UINT);
@@ -362,8 +375,12 @@ void gui_connect_run(Gui gui, void (*run)(void)) {
     gui->run = run;
 }
 
-void gui_connect_step(Gui gui, void (*step)(void)) {
-    gui->step = step;
+void gui_connect_step_in(Gui gui, void (*step_in)(void)) {
+    gui->step_in = step_in;
+}
+
+void gui_connect_step_out(Gui gui, void (*step_out)(void)) {
+    gui->step_out = step_out;
 }
 
 void gui_connect_pc(Gui gui, word *pc) {

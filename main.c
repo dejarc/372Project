@@ -15,11 +15,11 @@
  */
 static LC2200_ LC2200;
 
-/* STEP
+/* STEP IN
  * -----------------------------------------------------------------------------
  * Runs one instruction.
  */
-static void step() {
+static void step_in() {
 	start(LC2200, 's');
 }
 
@@ -29,14 +29,13 @@ static void step() {
  */
 static void run() {
 	start(LC2200, 'h');
-	//
 }
 
-/* JUMP OR BEQ
+/* STEP OUT
  * -----------------------------------------------------------------------------
  * Runs until a jump or beq is reached.
  */
-static void jumporbeq() {
+static void step_out() {
 	start(LC2200, 'j');
 }
 
@@ -169,11 +168,12 @@ int main(int argc, char *argv[]) {
 
 	Gui gui = gui_ctor();
 	gui_connect_pc(gui, &LC2200->pc->pc);
-	//gui_connect_memory(gui, LC2200->mem->MEM, MAX_MEM);
+	gui_connect_memory(gui, LC2200->mem->MEM, MAX_MEM);
     gui_connect_asm_print(gui, &asm_print);
-	gui_connect_memory(gui, LC2200->mem->MEM, (int)(MAX_MEM/10));
+	//gui_connect_memory(gui, LC2200->mem->MEM, (int)(MAX_MEM/10));
 	gui_connect_registers(gui, LC2200->reg->REG, REG_NAMES, REG_NUM);
-	gui_connect_step(gui, &step);
+	gui_connect_step_in(gui, &step_in);
+	gui_connect_step_out(gui, &step_out);
 	gui_connect_run(gui, &run);
 	gui_connect_open_file(gui, &open_file);
 	gui_main();

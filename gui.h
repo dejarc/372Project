@@ -29,8 +29,11 @@ void gui_connect_pc(Gui gui, word *pc);
 /* connect function called when the run button is pressed */
 void gui_connect_run(Gui gui, void (*run)(void));
 
-/* connect function called when the step button is pressed */
-void gui_connect_step(Gui gui, void (*step)(void));
+/* connect function called when the step in button is pressed */
+void gui_connect_step_in(Gui gui, void (*step_in)(void));
+
+/* connect function called when the step out button is pressed */
+void gui_connect_step_out(Gui gui, void (*step_out)(void));
 
 /* connect function called after the given file is chosen to be opened */
 void gui_connect_open_file(Gui gui, void (*open_file)(FILE *));
